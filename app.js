@@ -244,3 +244,38 @@ function statsStorageSize() {
   const raw = localStorage.getItem(STATS_KEY) || '{}';
   return (new Blob([raw]).size / 1024).toFixed(1); // KB
 }
+
+// ── MOBILE TAB BAR ────────────────────────────────────────────────────────────
+// Call buildMobileTabBar(setId, activeTab) on any set page.
+// activeTab: 'cards' | 'test' | 'stats' | 'edit'
+
+function buildMobileTabBar(setId, activeTab) {
+  let bar = document.getElementById('mobile-tab-bar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'mobile-tab-bar';
+    bar.className = 'mobile-tab-bar';
+    document.body.appendChild(bar);
+  }
+
+  const tabs = [
+    { id: 'home',  label: 'Home',  href: 'index.html',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+    { id: 'cards', label: 'Cards', href: setId ? 'flashcard.html?id='+setId : 'index.html',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>' },
+    { id: 'test',  label: 'Test',  href: setId ? 'test.html?id='+setId : 'index.html',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
+    { id: 'stats', label: 'Stats', href: setId ? 'stats.html?id='+setId : 'index.html',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
+    { id: 'edit',  label: 'Edit',  href: setId ? 'edit.html?id='+setId : 'index.html',
+      icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' },
+  ];
+
+  bar.innerHTML = tabs.map(t => {
+    const active = t.id === activeTab;
+    return `<a href="${t.href}" style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:0.6rem 0.25rem 0.4rem;font-size:0.62rem;font-weight:600;color:${active?'var(--accent)':'var(--text-muted)'};text-decoration:none;letter-spacing:0.02em;font-family:var(--font-body);transition:color 0.15s">
+      <span style="opacity:${active?1:0.55}">${t.icon}</span>
+      ${t.label}
+    </a>`;
+  }).join('');
+}

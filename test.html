@@ -269,6 +269,9 @@
           <button class="mode-btn" id="btn-written" onclick="selectMode('written')">
             Written
           </button>
+          <button class="mode-btn" id="btn-diction" onclick="selectMode('diction')">
+            🔊 Listen
+          </button>
         </div>
       </div>
       <div class="option-group">
@@ -383,6 +386,10 @@
     testMode = m;
     document.getElementById('btn-mcq').classList.toggle('active', m === 'mcq');
     document.getElementById('btn-written').classList.toggle('active', m === 'written');
+    document.getElementById('btn-diction').classList.toggle('active', m === 'diction');
+    // Diction doesn't use direction — grey it out
+    const dirBtns = document.querySelectorAll('#btn-defs, #btn-terms');
+    dirBtns.forEach(b => { b.style.opacity = m === 'diction' ? '0.4' : ''; b.style.pointerEvents = m === 'diction' ? 'none' : ''; });
   }
 
   function selectDir(d) {
@@ -410,9 +417,13 @@
   }
 
   function buildQuestion(card) {
-    // question = what we show; answer = correct answer
     const question = testDir === 'definitions' ? card.definition : card.term;
     const answer   = testDir === 'definitions' ? card.term : card.definition;
+
+    if (testMode === 'diction') {
+      // Speak the term; user must type it
+      return { card, question: '🔊', answer: card.term, spokenText: card.term, type: 'diction' };
+    }
 
     if (testMode === 'mcq') {
       // Pick 3 wrong distractors from other cards
@@ -434,6 +445,8 @@
     document.getElementById('test-progress-label').textContent = (qIdx + 1) + ' / ' + total;
 
     const q = questions[qIdx];
+    if (q.type === 'diction') { showDictionQuestion(); return; }
+
     const area = document.getElementById('question-area');
     const promptText = testDir === 'definitions'
       ? 'Type or choose the <strong>term</strong> for this definition:'
@@ -544,6 +557,7 @@
     document.getElementById('test-screen').style.display = 'none';
     document.getElementById('results-screen').style.display = '';
 
+    window.speechSynthesis && window.speechSynthesis.cancel();
     // Save to statistics
     saveTestResult(setId, {
       date: Date.now(),
@@ -616,7 +630,88 @@
     }
   });
 
+  // ── DICTION MODE (Web Speech API) ──────────────────────────────────────────
+  let speechAvailable = 'speechSynthesis' in window;
+
+  function speakText(text, onEnd) {
+    if (!speechAvailable) { toast('Speech not supported in this browser.'); return; }
+    window.speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.9;
+    if (onEnd) utt.onend = onEnd;
+    window.speechSynthesis.speak(utt);
+  }
+
+  function showDictionQuestion() {
+    const q = questions[qIdx];
+    const total = questions.length;
+    const area = document.getElementById('question-area');
+
+    // Speak after a short delay
+    setTimeout(() => speakText(q.spokenText), 300);
+
+    area.innerHTML = `
+      <div class="question-card">
+        <div class="question-num">Question ${qIdx + 1} of ${total}</div>
+        <div class="question-text" style="font-size:1rem;color:var(--text-muted);font-family:var(--font-body)">Listen and type what you hear</div>
+        <div class="question-prompt" style="margin-bottom:1.25rem">Spell the word or phrase spoken aloud.</div>
+        <div style="display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem">
+          <button class="btn btn-secondary" onclick="speakText(questions[qIdx].spokenText)" style="flex-shrink:0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            Play Again
+          </button>
+          <span style="font-size:0.78rem;color:var(--text-muted)">Press to hear it again</span>
+        </div>
+        <div class="written-wrap">
+          <textarea class="written-input" id="written-answer" rows="2"
+            placeholder="Type what you hear…"
+            onkeydown="if((event.key==='Enter')&&!event.shiftKey){event.preventDefault();submitDiction()}"
+          ></textarea>
+          <div class="answer-reveal" id="answer-reveal"></div>
+        </div>
+        <div class="submit-row">
+          <button class="btn btn-primary" id="submit-btn" onclick="submitDiction()">Submit</button>
+          <span id="written-feedback" style="font-size:0.85rem;color:var(--text-muted)"></span>
+        </div>
+      </div>`;
+    setTimeout(() => document.getElementById('written-answer')?.focus(), 60);
+  }
+
+  function submitDiction() {
+    const q = questions[qIdx];
+    const inputEl = document.getElementById('written-answer');
+    const submitBtn = document.getElementById('submit-btn');
+    const reveal = document.getElementById('answer-reveal');
+    if (!inputEl || submitBtn.dataset.state === 'next') { advanceQuestion(); return; }
+
+    const raw = inputEl.value.trim();
+    if (!raw) return;
+
+    window.speechSynthesis.cancel();
+
+    const normalize = s => s.trim().toLowerCase().replace(/\s+/g,' ').replace(/[.,;:!?\'"]/g,'');
+    const correct = normalize(raw) === normalize(q.spokenText);
+
+    inputEl.classList.add(correct ? 'correct' : 'wrong');
+    inputEl.disabled = true;
+
+    if (correct) {
+      score++;
+      reveal.className = 'answer-reveal show correct-reveal';
+      reveal.textContent = '✓ Correct!';
+    } else {
+      reveal.className = 'answer-reveal show wrong-reveal';
+      reveal.innerHTML = '✗ It was: <strong>' + escapeHtml(q.spokenText) + '</strong>';
+      missed.push({ q: { ...q, question: '🔊 ' + q.spokenText, answer: q.spokenText }, yourAnswer: raw });
+    }
+
+    submitBtn.textContent = qIdx < questions.length - 1 ? 'Next →' : 'See Results';
+    submitBtn.dataset.state = 'next';
+  }
+
+  buildMobileTabBar(setId, 'test');
   init();
 </script>
+<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
 </body>
 </html>

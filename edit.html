@@ -206,6 +206,7 @@
   </a>
   <div class="nav-links">
     <a href="index.html">← All Sets</a>
+    <a id="focus-link" href="#">Focus Mode</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
@@ -316,6 +317,8 @@
     if (!currentSet) { window.location.href = 'index.html'; return; }
 
     document.title = `Edit: ${currentSet.title} – FlashDeck`;
+    const focusEl = document.getElementById('focus-link');
+    if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
     document.getElementById('edit-title').value = currentSet.title;
     document.getElementById('edit-desc').value = currentSet.description || '';
     renderCards();
@@ -493,6 +496,8 @@
     dirty = false;
     document.getElementById('save-bar').classList.add('hidden');
     document.title = `Edit: ${currentSet.title} – FlashDeck`;
+    const focusEl = document.getElementById('focus-link');
+    if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
     toast('Saved!');
   }
 
@@ -555,7 +560,9 @@
     }
   });
 
+  buildMobileTabBar(setId, 'edit');
   init();
 </script>
+<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
 </body>
 </html>

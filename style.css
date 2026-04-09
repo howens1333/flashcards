@@ -416,3 +416,144 @@ kbd {
   nav { padding: 0 1rem; }
   .page-header h1 { font-size: 1.7rem; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   MOBILE — full app-like experience on small screens
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Bottom tab bar (mobile nav) */
+.mobile-tab-bar {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+}
+
+.mobile-tab-bar nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  padding: 0.6rem 0.5rem 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  transition: color var(--transition);
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+
+.mobile-tab-bar nav-tab svg { opacity: 0.6; transition: opacity var(--transition); }
+.mobile-tab-bar nav-tab.active { color: var(--accent); }
+.mobile-tab-bar nav-tab.active svg { opacity: 1; }
+
+@media (max-width: 680px) {
+  /* Show bottom tab bar, hide desktop nav links */
+  .mobile-tab-bar { display: flex; }
+  .nav-links { display: none !important; }
+
+  /* Push content above tab bar */
+  body { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+
+  /* Nav becomes just a brand bar */
+  nav {
+    height: 52px;
+    padding: 0 1rem;
+    justify-content: space-between;
+  }
+
+  /* Container padding tighter on mobile */
+  .container { padding: 1.25rem 1rem 1rem; }
+
+  /* Page headers smaller */
+  .page-header { margin-bottom: 1.5rem; }
+  .page-header h1 { font-size: 1.5rem; }
+  .page-header p { font-size: 0.85rem; }
+
+  /* Full-width toolbar stacking */
+  .toolbar { flex-direction: column; align-items: stretch; gap: 0.6rem; }
+  .toolbar .search-wrap { max-width: 100%; }
+  .toolbar .btn-group { flex-wrap: wrap; }
+  .toolbar .btn-group .btn { flex: 1; min-width: 0; justify-content: center; font-size: 0.82rem; }
+
+  /* Full-width grids */
+  .sets-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .folders-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .summary-grid { grid-template-columns: repeat(3, 1fr); gap: 0.6rem; }
+
+  /* Set cards — slightly more compact */
+  .set-card { padding: 1.1rem 1.1rem 0.9rem; }
+  .set-card-actions { opacity: 1; } /* always visible on mobile */
+  .folder-actions { opacity: 1; }
+
+  /* Modals full-screen on mobile */
+  .modal-overlay { align-items: flex-end; }
+  .modal {
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    max-width: 100%;
+    width: 100%;
+    padding: 1.5rem 1.25rem 2rem;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  /* Combine bar sits above tab bar */
+  .combine-bar { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  .save-bar { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
+  #toast-container { bottom: calc(72px + env(safe-area-inset-bottom, 0px)); right: 1rem; }
+
+  /* Filter chips scrollable row */
+  .folder-filter-row { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 0.25rem; -webkit-overflow-scrolling: touch; }
+  .folder-filter-row::-webkit-scrollbar { display: none; }
+  .filter-chip { flex-shrink: 0; }
+
+  /* Study page */
+  .flashcard-wrapper { padding-top: 62%; }
+  .flashcard-face { padding: 1.5rem 1.25rem; }
+  .settings-bar { gap: 0.75rem; }
+  .card-nav { gap: 0.5rem; }
+  .flip-btn { max-width: none; }
+  .dot-carousel { gap: 4px; }
+
+  /* Test page */
+  .setup-card { border-radius: var(--radius-lg) var(--radius-lg) 0 0; padding: 1.5rem 1.25rem; }
+  .mcq-option { padding: 0.8rem 0.9rem; }
+  .question-card { padding: 1.5rem 1.1rem 1.25rem; border-radius: var(--radius); }
+  .mode-btns { flex-direction: column; }
+
+  /* Stats page */
+  .stat-value { font-size: 1.6rem; }
+  .history-table thead th:nth-child(5),
+  .history-table tbody td:nth-child(5) { display: none; } /* hide mode col */
+  .weak-grid { grid-template-columns: 1fr; }
+
+  /* Edit page */
+  .edit-header { flex-direction: column; gap: 1rem; }
+  .edit-actions { flex-direction: row; width: 100%; }
+  .edit-actions .btn { flex: 1; justify-content: center; }
+  .card-row { grid-template-columns: 1fr; padding: 0.85rem 0.85rem 0.7rem; }
+  .card-num { display: none; }
+  .col-labels { display: none; }
+  .card-row textarea { min-height: 48px; }
+
+  /* Import page */
+  .import-landing { margin: 1.5rem auto; }
+  .import-actions { flex-direction: column; }
+  .import-actions .btn { width: 100%; justify-content: center; }
+
+  /* Flashcard focused mode */
+  .focus-card-area { padding: 0 0.5rem; }
+}
+
+/* Slightly larger than phone but still tablet */
+@media (max-width: 680px) and (min-width: 480px) {
+  .sets-grid { grid-template-columns: repeat(2, 1fr); }
+}

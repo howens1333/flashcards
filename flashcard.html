@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Flashcards – FlashDeck</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── FULL-SCREEN FOCUS LAYOUT ── */
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    nav { flex-shrink: 0; }
+
+    .focus-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── TOP BAR ── */
+    .focus-topbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.85rem 1.5rem 0;
+      flex-shrink: 0;
+    }
+
+    .focus-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .focus-progress-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .focus-counter {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-width: 3.5rem;
+      text-align: right;
+    }
+
+    .focus-progress-bar-outer {
+      width: 120px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .focus-progress-bar-inner {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.35s ease;
+    }
+
+    /* ── CARD STAGE ── */
+    .focus-stage {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 1.5rem;
+      perspective: 1400px;
+      overflow: hidden;
+    }
+
+    .focus-card-scene {
+      width: 100%;
+      max-width: 640px;
+      height: min(360px, 52vw);
+      position: relative;
+      cursor: pointer;
+    }
+
+    @media (max-width: 680px) {
+      .focus-card-scene { height: min(280px, 58vw); }
+    }
+
+    .focus-card-inner {
+      width: 100%;
+      height: 100%;
+      transform-style: preserve-3d;
+      transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .focus-card-inner.flipped { transform: rotateY(180deg); }
+
+    .focus-card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    .focus-card-face.focus-back {
+      transform: rotateY(180deg);
+      background: var(--accent-light);
+      border-color: rgba(45,90,39,0.2);
+    }
+
+    [data-theme="dark"] .focus-card-face.focus-back {
+      border-color: rgba(90,158,82,0.2);
+    }
+
+    .focus-card-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .focus-back .focus-card-label { color: var(--accent); }
+
+    .focus-card-text {
+      font-family: var(--font-display);
+      font-size: clamp(1.1rem, 4vw, 1.9rem);
+      text-align: center;
+      color: var(--text);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+      max-height: 70%;
+      overflow: hidden;
+    }
+
+    .focus-back .focus-card-text { color: var(--accent-hover); }
+    [data-theme="dark"] .focus-back .focus-card-text { color: var(--accent); }
+
+    .focus-tap-hint {
+      position: absolute;
+      bottom: 0.9rem;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      opacity: 0.45;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── DOT CAROUSEL ── */
+    .focus-dots {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 5px;
+      padding: 0 1.5rem 0.5rem;
+      flex-wrap: wrap;
+      min-height: 18px;
+      flex-shrink: 0;
+    }
+
+    .focus-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s, transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .focus-dot.active { background: var(--accent); transform: scale(1.4); }
+    .focus-dot.seen   { background: var(--text-muted); opacity: 0.4; }
+
+    /* ── BOTTOM NAV ── */
+    .focus-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.5rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
+      flex-shrink: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+
+    .focus-nav-btn {
+      width: 48px; height: 48px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+
+    .focus-nav-btn:hover:not(:disabled) { background: var(--surface-2); }
+    .focus-nav-btn:disabled { opacity: 0.28; cursor: default; }
+
+    .focus-flip-btn {
+      flex: 1;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all var(--transition);
+    }
+
+    .focus-flip-btn:hover { background: var(--surface-2); }
+
+    /* ── SETTINGS OVERLAY ── */
+    .focus-settings-btn {
+      width: 38px; height: 38px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+
+    .focus-settings-btn:hover { background: var(--surface-2); color: var(--text); }
+
+    .settings-drawer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 1.25rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+      z-index: 150;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+    }
+
+    .settings-drawer.open { transform: translateY(0); }
+
+    .settings-drawer h3 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 140;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .drawer-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-row label {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+
+    .setting-row .toggle-wrap {
+      margin: 0;
+    }
+
+    /* ── DONE SCREEN ── */
+    .focus-done {
+      position: absolute;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      z-index: 10;
+    }
+
+    .focus-done .done-emoji { font-size: 3.5rem; margin-bottom: 1rem; }
+
+    .focus-done h2 {
+      font-family: var(--font-display);
+      font-size: 1.7rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .focus-done p { color: var(--text-muted); margin-bottom: 2rem; }
+
+    .focus-done-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .focus-done-btns .btn { justify-content: center; padding: 0.8rem; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <div class="nav-links">
+    <a href="index.html">← Home</a>
+    <a id="study-link" href="#">Full View</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="focus-wrap">
+  <!-- Top bar -->
+  <div class="focus-topbar">
+    <div class="focus-title" id="focus-title">Loading…</div>
+    <div class="focus-progress-wrap">
+      <div class="focus-progress-bar-outer">
+        <div class="focus-progress-bar-inner" id="focus-prog" style="width:0%"></div>
+      </div>
+      <div class="focus-counter" id="focus-counter">0 / 0</div>
+    </div>
+    <button class="focus-settings-btn" onclick="openDrawer()" title="Settings">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <!-- Card stage -->
+  <div class="focus-stage" id="focus-stage">
+    <div class="focus-card-scene" onclick="flipCard()" id="card-scene">
+      <div class="focus-card-inner" id="card-inner">
+        <div class="focus-card-face focus-front">
+          <div class="focus-card-label" id="front-label">Term</div>
+          <div class="focus-card-text" id="front-text"></div>
+          <span class="focus-tap-hint">Tap to flip</span>
+        </div>
+        <div class="focus-card-face focus-back">
+          <div class="focus-card-label" id="back-label">Definition</div>
+          <div class="focus-card-text" id="back-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dots -->
+  <div class="focus-dots" id="focus-dots"></div>
+
+  <!-- Bottom nav -->
+  <div class="focus-nav">
+    <button class="focus-nav-btn" id="prev-btn" onclick="prevCard()" disabled title="Previous (←)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="focus-flip-btn" onclick="flipCard()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+      Flip
+    </button>
+    <button class="focus-nav-btn" id="next-btn" onclick="nextCard()" title="Next (→)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="focus-done" id="done-screen" style="display:none">
+    <div class="done-emoji">🎉</div>
+    <h2>All done!</h2>
+    <p id="done-msg"></p>
+    <div class="focus-done-btns">
+      <button class="btn btn-secondary" onclick="restart(false)">↺ Restart</button>
+      <button class="btn btn-secondary" onclick="restart(true)">🔀 Shuffle &amp; Restart</button>
+      <a class="btn btn-primary" id="done-test-link" href="#">Take a Test</a>
+    </div>
+  </div>
+</div>
+
+<!-- Settings drawer -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="settings-drawer" id="settings-drawer">
+  <h3>
+    Settings
+    <button onclick="closeDrawer()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);display:flex">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </h3>
+  <div class="setting-row">
+    <label>Shuffle cards</label>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="shuffle-tog" onchange="handleShuffle()">
+      <span class="toggle"></span>
+    </label>
+  </div>
+  <div class="setting-row">
+    <label>Definitions first</label>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="defsfirst-tog" onchange="showCard()">
+      <span class="toggle"></span>
+    </label>
+  </div>
+  <div class="setting-row" style="padding-top:1rem;border-top:none">
+    <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="restart(false);closeDrawer()">↺ Restart from beginning</button>
+  </div>
+</div>
+
+<!-- Mobile bottom tab bar -->
+<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
+
+<script src="app.js"></script>
+<script>
+  const setId = getParam('id');
+  let originalSet = null;
+  let deck = [];
+  let idx = 0;
+  let isFlipped = false;
+  let seenSet = new Set();
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _orig = toggleTheme;
+  window.toggleTheme = function() { _orig(); updateThemeLabel(); };
+
+  function init() {
+    if (!setId) { window.location.href = 'index.html'; return; }
+    originalSet = getSet(setId);
+    if (!originalSet) { window.location.href = 'index.html'; return; }
+
+    document.title = originalSet.title + ' – FlashDeck';
+    document.getElementById('focus-title').textContent = originalSet.title;
+    document.getElementById('study-link').href = 'study.html?id=' + setId;
+    document.getElementById('done-test-link').href = 'test.html?id=' + setId;
+    updateThemeLabel();
+    buildTabBar();
+
+    deck = [...originalSet.cards];
+    showCard();
+  }
+
+  function buildTabBar() {
+    const bar = document.getElementById('mobile-tab-bar');
+    const tabs = [
+      { label: 'Home', href: 'index.html', icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' },
+      { label: 'Cards', href: 'flashcard.html?id=' + setId, icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>', active: true },
+      { label: 'Test', href: 'test.html?id=' + setId, icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>' },
+      { label: 'Stats', href: 'stats.html?id=' + setId, icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>' },
+      { label: 'Edit', href: 'edit.html?id=' + setId, icon: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' },
+    ];
+    bar.innerHTML = tabs.map(t =>
+      `<a is="nav-tab" class="mobile-tab-bar" href="${t.href}" style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;padding:0.6rem 0.5rem 0.4rem;font-size:0.63rem;font-weight:600;color:${t.active?'var(--accent)':'var(--text-muted)'};text-decoration:none;letter-spacing:0.02em;font-family:var(--font-body)">
+        <span style="opacity:${t.active?1:0.55}">${t.icon}</span>
+        ${t.label}
+      </a>`
+    ).join('');
+  }
+
+  function showCard() {
+    const showDef = document.getElementById('defsfirst-tog').checked;
+    const card = deck[idx];
+    const total = deck.length;
+    if (!card) return;
+
+    document.getElementById('front-label').textContent = showDef ? 'Definition' : 'Term';
+    document.getElementById('back-label').textContent  = showDef ? 'Term' : 'Definition';
+    document.getElementById('front-text').textContent  = showDef ? card.definition : card.term;
+    document.getElementById('back-text').textContent   = showDef ? card.term : card.definition;
+
+    const pct = (idx + 1) / total * 100;
+    document.getElementById('focus-prog').style.width = pct + '%';
+    document.getElementById('focus-counter').textContent = (idx + 1) + ' / ' + total;
+
+    document.getElementById('prev-btn').disabled = idx === 0;
+
+    isFlipped = false;
+    document.getElementById('card-inner').classList.remove('flipped');
+
+    renderDots();
+
+    document.getElementById('done-screen').style.display = 'none';
+  }
+
+  function renderDots() {
+    const container = document.getElementById('focus-dots');
+    const total = deck.length;
+    const MAX = 40;
+    if (total === 0) { container.innerHTML = ''; return; }
+
+    const compact = total > 18;
+    const items = total <= MAX
+      ? Array.from({length: total}, (_, i) => i)
+      : (() => {
+          const half = 15;
+          const start = Math.max(0, Math.min(idx - half, total - MAX));
+          return Array.from({length: Math.min(MAX, total)}, (_, i) => start + i);
+        })();
+
+    container.innerHTML = items.map(i => {
+      let cls = 'focus-dot';
+      if (i === idx) cls += ' active';
+      else if (seenSet.has(i)) cls += ' seen';
+      if (compact) return `<div class="${cls}" style="width:5px;height:5px"></div>`;
+      return `<div class="${cls}"></div>`;
+    }).join('');
+  }
+
+  function flipCard() {
+    isFlipped = !isFlipped;
+    document.getElementById('card-inner').classList.toggle('flipped', isFlipped);
+  }
+
+  function nextCard() {
+    seenSet.add(idx);
+    if (idx < deck.length - 1) {
+      idx++;
+      showCard();
+    } else {
+      showDone();
+    }
+  }
+
+  function prevCard() {
+    if (idx > 0) { idx--; showCard(); }
+  }
+
+  function showDone() {
+    seenSet.add(idx);
+    for (let i = 0; i < deck.length; i++) seenSet.add(i);
+    renderDots();
+    document.getElementById('done-msg').textContent =
+      'You went through all ' + deck.length + ' cards.';
+    document.getElementById('done-screen').style.display = 'flex';
+  }
+
+  function restart(doShuffle) {
+    document.getElementById('shuffle-tog').checked = doShuffle;
+    deck = doShuffle ? shuffle(originalSet.cards) : [...originalSet.cards];
+    idx = 0;
+    seenSet = new Set();
+    showCard();
+    if (doShuffle) toast('Shuffled!');
+  }
+
+  function handleShuffle() {
+    const on = document.getElementById('shuffle-tog').checked;
+    deck = on ? shuffle(originalSet.cards) : [...originalSet.cards];
+    idx = 0; seenSet = new Set();
+    showCard();
+    toast(on ? 'Cards shuffled.' : 'Original order restored.');
+  }
+
+  function openDrawer() {
+    document.getElementById('settings-drawer').classList.add('open');
+    document.getElementById('drawer-overlay').classList.add('show');
+  }
+
+  function closeDrawer() {
+    document.getElementById('settings-drawer').classList.remove('open');
+    document.getElementById('drawer-overlay').classList.remove('show');
+  }
+
+  // Swipe left/right on card
+  let touchStartX = null, touchStartY = null;
+  document.getElementById('card-scene').addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.getElementById('card-scene').addEventListener('touchend', e => {
+    if (touchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      dx < 0 ? nextCard() : prevCard();
+    }
+    touchStartX = touchStartY = null;
+  });
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); nextCard(); }
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); prevCard(); }
+    if (e.key === ' ')          { e.preventDefault(); flipCard(); }
+    if (e.key === 'Escape')     closeDrawer();
+  });
+
+  init();
+</script>
+</body>
+</html>

@@ -379,6 +379,7 @@
   </a>
   <div class="nav-links">
     <a href="index.html">← All Sets</a>
+    <a id="focus-link" href="#" title="Distraction-free card view">Focus Mode</a>
     <a id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
     <a id="stats-link" href="#">Stats</a>
@@ -517,6 +518,7 @@
     document.getElementById('set-title').textContent = originalSet.title;
     document.getElementById('set-badge').textContent =
       `${originalSet.cards.length} card${originalSet.cards.length !== 1 ? 's' : ''}`;
+    document.getElementById('focus-link').href = `flashcard.html?id=${setId}`;
     document.getElementById('edit-link').href = `edit.html?id=${setId}`;
     document.getElementById('test-link').href = `test.html?id=${setId}`;
     document.getElementById('stats-link').href = `stats.html?id=${setId}`;
@@ -732,7 +734,9 @@
       .catch(() => prompt("Copy this share link:", url));
   }
 
+  buildMobileTabBar(setId, 'cards');
   init();
 </script>
+<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
 </body>
 </html>
