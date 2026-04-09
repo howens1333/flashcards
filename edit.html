@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Set – FlashDeck</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .edit-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .edit-header-fields {
+      flex: 1;
+      min-width: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    #edit-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      letter-spacing: -0.01em;
+    }
+
+    #edit-desc { font-size: 0.875rem; }
+
+    .edit-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+      padding-top: 0.4rem;
+    }
+
+    /* ── CARDS LIST ── */
+    .cards-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+
+    .cards-header h2 {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+    }
+
+    #cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-row {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      display: grid;
+      grid-template-columns: 2rem 1fr 1fr auto;
+      align-items: start;
+      gap: 0.75rem;
+      padding: 0.9rem 1rem;
+      transition: box-shadow var(--transition);
+      animation: rowIn 0.15s ease;
+    }
+
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-row:focus-within {
+      border-color: #b5b0a8;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-num {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding-top: 0.65rem;
+      text-align: right;
+      user-select: none;
+    }
+
+    .card-row textarea {
+      font-size: 0.875rem;
+      min-height: 60px;
+      border-color: transparent;
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      resize: none;
+    }
+
+    .card-row textarea:focus {
+      background: var(--surface);
+      border-color: var(--accent);
+    }
+
+    .card-row-actions {
+      display: flex;
+      align-items: center;
+      padding-top: 0.45rem;
+    }
+
+    .delete-card-btn {
+      background: none;
+      border: none;
+      padding: 0.35rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all var(--transition);
+      display: flex;
+    }
+
+    .delete-card-btn:hover { color: var(--danger); background: var(--danger-light); }
+
+    /* Column labels */
+    .col-labels {
+      display: grid;
+      grid-template-columns: 2rem 1fr 1fr auto;
+      gap: 0.75rem;
+      padding: 0 1rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .col-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .add-card-btn {
+      width: 100%;
+      padding: 0.9rem;
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .add-card-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* save bar */
+    .save-bar {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.6rem 1rem 0.6rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 50;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      animation: slideUp 0.2s ease;
+      transition: opacity 0.2s;
+    }
+
+    .save-bar.hidden { opacity: 0; pointer-events: none; }
+
+    @media (max-width: 640px) {
+      .card-row {
+        grid-template-columns: 1fr;
+      }
+      .card-num { display: none; }
+      .col-labels { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-brand">
+    <span class="dot"></span> FlashDeck
+  </a>
+  <div class="nav-links">
+    <a href="index.html">← All Sets</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="edit-header">
+    <div class="edit-header-fields">
+      <input type="text" id="edit-title" placeholder="Set title…" maxlength="100" oninput="markDirty()">
+      <input type="text" id="edit-desc" placeholder="Description (optional)" maxlength="200" oninput="markDirty()">
+    </div>
+    <div class="edit-actions">
+      <button class="btn btn-secondary" id="study-btn" onclick="goStudy()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Study
+      </button>
+      <button class="btn btn-primary" onclick="saveAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+    </div>
+  </div>
+
+  <div class="cards-header">
+    <h2 id="card-count-label">Cards</h2>
+    <button class="btn btn-ghost btn-icon" title="Import cards from tab-delimited text" onclick="openTextImport()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    </button>
+  </div>
+
+  <div class="col-labels">
+    <span></span>
+    <span class="col-label">Term</span>
+    <span class="col-label">Definition</span>
+    <span></span>
+  </div>
+
+  <div id="cards-list"></div>
+
+  <button class="add-card-btn" onclick="addCard()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add Card
+  </button>
+
+  <div style="display:flex;gap:1.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Enter</kbd> Next field / new card</span>
+    <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Tab</kbd> New card from last field</span>
+    <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Del</kbd> Delete empty card</span>
+    <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Ctrl S</kbd> Save</span>
+  </div>
+</div>
+
+<!-- Floating save bar -->
+<div class="save-bar hidden" id="save-bar">
+  Unsaved changes
+  <button class="btn btn-primary" style="border-radius:99px;padding:0.4rem 1rem" onclick="saveAll()">Save</button>
+</div>
+
+<!-- Delete Card Modal -->
+<div id="delete-card-modal" class="modal-overlay" style="display:none" onclick="if(event.target.id==='delete-card-modal') closeModal('delete-card-modal')">
+  <div class="modal">
+    <h2>Delete Card?</h2>
+    <p id="delete-card-msg" style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0"></p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delete-card-modal')">Cancel</button>
+      <button class="btn btn-danger" onclick="executeDeleteCard()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Text import modal -->
+<div id="text-import-modal" class="modal-overlay" style="display:none" onclick="if(event.target.id==='text-import-modal') closeTextImport()">
+  <div class="modal" style="max-width:560px">
+    <h2>Paste Cards</h2>
+    <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem">Paste tab-separated or comma-separated text. One card per line: <strong>Term [tab] Definition</strong>. Works great with Quizlet exports.</p>
+    <textarea id="paste-area" rows="10" placeholder="photosynthesis	process by which plants convert sunlight to energy&#10;mitosis	cell division producing two identical daughter cells"></textarea>
+    <div style="margin-top:0.75rem;display:flex;gap:0.5rem;align-items:center">
+      <label style="font-size:0.8rem;color:var(--text-muted)">Separator:</label>
+      <select id="sep-select" style="font-family:var(--font-body);font-size:0.85rem;padding:0.3rem 0.6rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)">
+        <option value="tab">Tab</option>
+        <option value="comma">Comma</option>
+        <option value="pipe">Pipe (|)</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeTextImport()">Cancel</button>
+      <button class="btn btn-primary" onclick="importFromText()">Import Cards</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const setId = getParam('id');
+  let currentSet = null;
+  let dirty = false;
+  let pendingDeleteCardId = null;
+
+  function init() {
+    if (!setId) { window.location.href = 'index.html'; return; }
+    currentSet = getSet(setId);
+    if (!currentSet) { window.location.href = 'index.html'; return; }
+
+    document.title = `Edit: ${currentSet.title} – FlashDeck`;
+    document.getElementById('edit-title').value = currentSet.title;
+    document.getElementById('edit-desc').value = currentSet.description || '';
+    renderCards();
+    updateThemeLabel();
+  }
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+
+  const _origToggleTheme = toggleTheme;
+  window.toggleTheme = function() { _origToggleTheme(); updateThemeLabel(); };
+
+  function renderCards() {
+    const list = document.getElementById('cards-list');
+    if (!currentSet.cards.length) {
+      list.innerHTML = '';
+      updateCount();
+      return;
+    }
+    list.innerHTML = currentSet.cards.map((c, i) => `
+      <div class="card-row" id="row-${c.id}">
+        <span class="card-num">${i + 1}</span>
+        <textarea
+          placeholder="Term"
+          data-card-id="${c.id}"
+          data-field="term"
+          oninput="updateCardField('${c.id}','term',this.value);autoResize(this)"
+        >${escapeHtml(c.term)}</textarea>
+        <textarea
+          placeholder="Definition"
+          data-card-id="${c.id}"
+          data-field="definition"
+          oninput="updateCardField('${c.id}','definition',this.value);autoResize(this)"
+        >${escapeHtml(c.definition)}</textarea>
+        <div class="card-row-actions">
+          <button class="delete-card-btn" title="Delete card (Del on empty field)" onclick="confirmDeleteCard('${c.id}')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    // Attach keydown listeners
+    list.querySelectorAll('textarea').forEach(ta => {
+      ta.addEventListener('keydown', handleTextareaKeydown);
+      autoResize(ta);
+    });
+
+    updateCount();
+  }
+
+  function handleTextareaKeydown(e) {
+    const cardId = this.dataset.cardId;
+    const field = this.dataset.field;
+
+    // Enter on definition (not shift+enter) → add new card if last, else move to next term
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (field === 'definition') {
+        e.preventDefault();
+        const idx = currentSet.cards.findIndex(c => c.id === cardId);
+        if (idx === currentSet.cards.length - 1) {
+          addCard();
+        } else {
+          // Focus next card's term
+          const nextId = currentSet.cards[idx + 1].id;
+          const nextRow = document.getElementById(`row-${nextId}`);
+          if (nextRow) nextRow.querySelector('textarea[data-field="term"]')?.focus();
+        }
+      } else if (field === 'term') {
+        // Enter on term → jump to its definition
+        e.preventDefault();
+        const row = document.getElementById(`row-${cardId}`);
+        if (row) row.querySelector('textarea[data-field="definition"]')?.focus();
+      }
+    }
+
+    // Tab from definition → add new card if last, else go to next term
+    if (e.key === 'Tab' && field === 'definition' && !e.shiftKey) {
+      const idx = currentSet.cards.findIndex(c => c.id === cardId);
+      if (idx === currentSet.cards.length - 1) {
+        e.preventDefault();
+        addCard();
+      }
+    }
+
+    // Delete/Backspace on an empty field → prompt to delete card
+    if ((e.key === 'Delete' || e.key === 'Backspace') && this.value === '') {
+      // Only trigger on Delete key (not Backspace, which is normal editing)
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        confirmDeleteCard(cardId);
+      }
+    }
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.max(60, el.scrollHeight) + 'px';
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str || '';
+    return d.innerHTML;
+  }
+
+  function updateCardField(id, field, value) {
+    const card = currentSet.cards.find(c => c.id === id);
+    if (card) card[field] = value;
+    markDirty();
+  }
+
+  function updateCount() {
+    const n = currentSet.cards.length;
+    document.getElementById('card-count-label').textContent = `${n} Card${n !== 1 ? 's' : ''}`;
+  }
+
+  function addCard() {
+    const card = createCard();
+    currentSet.cards.push(card);
+    markDirty();
+    renderCards();
+    setTimeout(() => {
+      const row = document.getElementById(`row-${card.id}`);
+      if (row) {
+        const ta = row.querySelector('textarea');
+        if (ta) { ta.focus(); ta.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      }
+    }, 30);
+    toast('Card added.');
+  }
+
+  function confirmDeleteCard(id) {
+    pendingDeleteCardId = id;
+    const card = currentSet.cards.find(c => c.id === id);
+    const preview = card ? (card.term || card.definition || 'this card') : 'this card';
+    document.getElementById('delete-card-msg').textContent = `Delete "${preview.slice(0, 60)}${preview.length > 60 ? '…' : ''}"?`;
+    document.getElementById('delete-card-modal').style.display = 'flex';
+  }
+
+  function executeDeleteCard() {
+    if (!pendingDeleteCardId) return;
+    // Focus neighboring card before removing
+    const idx = currentSet.cards.findIndex(c => c.id === pendingDeleteCardId);
+    currentSet.cards = currentSet.cards.filter(c => c.id !== pendingDeleteCardId);
+    markDirty();
+    closeModal('delete-card-modal');
+    renderCards();
+    // Focus nearby card
+    setTimeout(() => {
+      const target = currentSet.cards[Math.min(idx, currentSet.cards.length - 1)];
+      if (target) {
+        const row = document.getElementById(`row-${target.id}`);
+        if (row) row.querySelector('textarea')?.focus();
+      }
+    }, 30);
+    toast('Card deleted.');
+  }
+
+  function markDirty() {
+    dirty = true;
+    document.getElementById('save-bar').classList.remove('hidden');
+  }
+
+  function saveAll() {
+    const title = document.getElementById('edit-title').value.trim();
+    if (!title) { document.getElementById('edit-title').focus(); toast('Please enter a title.'); return; }
+    currentSet.title = title;
+    currentSet.description = document.getElementById('edit-desc').value.trim();
+    currentSet.modified = Date.now();
+    saveSet(currentSet);
+    dirty = false;
+    document.getElementById('save-bar').classList.add('hidden');
+    document.title = `Edit: ${currentSet.title} – FlashDeck`;
+    toast('Saved!');
+  }
+
+  function goStudy() {
+    if (dirty) saveAll();
+    if (!currentSet.cards.length) { toast('Add some cards first.'); return; }
+    window.location.href = `study.html?id=${setId}`;
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  // Text paste import
+  function openTextImport() {
+    document.getElementById('text-import-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('paste-area').focus(), 80);
+  }
+
+  function closeTextImport() {
+    document.getElementById('text-import-modal').style.display = 'none';
+    document.getElementById('paste-area').value = '';
+  }
+
+  function importFromText() {
+    const raw = document.getElementById('paste-area').value.trim();
+    if (!raw) { toast('Nothing to import.'); return; }
+    const sep = { tab: '\t', comma: ',', pipe: '|' }[document.getElementById('sep-select').value];
+    const lines = raw.split('\n').filter(l => l.trim());
+    let added = 0;
+    lines.forEach(line => {
+      const parts = line.split(sep);
+      if (parts.length >= 2) {
+        currentSet.cards.push(createCard(parts[0].trim(), parts.slice(1).join(sep).trim()));
+        added++;
+      }
+    });
+    if (!added) { toast('No cards found — check your separator.'); return; }
+    markDirty();
+    renderCards();
+    closeTextImport();
+    toast(`Added ${added} card${added !== 1 ? 's' : ''}.`);
+  }
+
+  window.addEventListener('beforeunload', e => {
+    if (dirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveAll(); }
+    if (e.key === 'Escape') {
+      closeModal('delete-card-modal');
+      closeTextImport();
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
