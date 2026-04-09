@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats – FlashDeck</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── HEADER ── */
+    .stats-meta {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 2.25rem;
+      flex-wrap: wrap;
+    }
+    .stats-meta h1 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      flex: 1;
+    }
+
+    /* ── SUMMARY CARDS ── */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.25rem;
+    }
+    .summary-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--text);
+    }
+    .stat-value.good { color: var(--accent); }
+    .stat-value.warn { color: #e67e22; }
+    .stat-value.bad  { color: var(--danger); }
+    .stat-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .stat-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.1rem;
+    }
+
+    /* ── SCORE CHART ── */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+    .chart-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.5rem 1rem;
+      margin-bottom: 2.25rem;
+      overflow: hidden;
+      padding:3rem;
+    }
+    .chart-area {
+      position: relative;
+      height: 160px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .chart-bar-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      justify-content: flex-end;
+      min-width: 0;
+    }
+    .chart-bar {
+      width: 100%;
+      border-radius: 4px 4px 0 0;
+      min-height: 3px;
+      transition: opacity 0.15s;
+      cursor: default;
+      position: relative;
+    }
+    .chart-bar:hover::after {
+      content: attr(data-tip);
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1e1b18;
+      color: #f0ece6;
+      font-size: 0.72rem;
+      font-weight: 500;
+      padding: 0.3rem 0.55rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      z-index: 10;
+    }
+    .chart-date {
+      font-size: 0.62rem;
+      color: var(--text-muted);
+      text-align: center;
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      max-height: 52px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1;
+    }
+    .chart-y-lines {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+    .chart-y-line {
+      border-top: 1px dashed var(--border);
+      width: 100%;
+      position: relative;
+    }
+    .chart-y-label {
+      position: absolute;
+      right: calc(100% + 6px);
+      top: -9px;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .chart-outer {
+      position: relative;
+      padding-left: 2.5rem;
+    }
+
+    /* ── HISTORY TABLE ── */
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .history-table thead th {
+      text-align: left;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0.5rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .history-table tbody tr { border-bottom: 1px solid var(--border); transition: background var(--transition); }
+    .history-table tbody tr:last-child { border-bottom: none; }
+    .history-table tbody tr:hover { background: var(--surface-2); }
+    .history-table td { padding: 0.75rem 0.85rem; vertical-align: middle; }
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 99px;
+    }
+    .pill-good { background: #eafaf1; color: #1a7a45; }
+    [data-theme="dark"] .pill-good { background: #0f2e1a; color: #5dd68a; }
+    .pill-warn { background: #fef5e7; color: #b7770d; }
+    [data-theme="dark"] .pill-warn { background: #2a1f08; color: #e6a93a; }
+    .pill-bad  { background: var(--danger-light); color: var(--danger); }
+    .mode-tag {
+      font-size: 0.72rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 2.25rem;
+    }
+
+    /* ── WEAK CARDS ── */
+    .weak-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 2.25rem;
+    }
+    .weak-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+    }
+    .weak-term { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .weak-def { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .weak-miss {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* ── EMPTY ── */
+    .no-stats {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    .no-stats .empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .no-stats h3 { font-family: var(--font-display); font-size: 1.3rem; color: var(--text); margin-bottom: 0.4rem; }
+    .no-stats p { font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    /* ── STORAGE INFO ── */
+    .storage-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+      margin-top: -1.5rem;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <div class="nav-links">
+    <a href="index.html">← All Sets</a>
+    <a id="study-link" href="#">Study</a>
+    <a id="edit-link" href="#">Edit</a>
+    <a id="test-link" href="#">Test</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="stats-meta">
+    <div style="flex:1;min-width:0">
+      <h1 id="set-title">Loading…</h1>
+      <div style="color:var(--text-muted);font-size:0.875rem;margin-top:0.2rem" id="set-sub"></div>
+    </div>
+    <button class="btn btn-danger" id="clear-btn" onclick="confirmClear()" style="align-self:flex-start;display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      Clear History
+    </button>
+  </div>
+
+  <div id="main-content"></div>
+</div>
+
+<!-- Clear confirm modal -->
+<div id="clear-modal" class="modal-overlay" style="display:none" onclick="if(event.target.id==='clear-modal')document.getElementById('clear-modal').style.display='none'">
+  <div class="modal">
+    <h2>Clear History?</h2>
+    <p style="font-size:0.9rem;color:var(--text-muted)">All test results for this set will be permanently deleted. Your flashcards won't be affected.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="document.getElementById('clear-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-danger" onclick="doClear()">Clear History</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const setId = getParam('id');
+  let currentSet = null;
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _orig = toggleTheme;
+  window.toggleTheme = function() { _orig(); updateThemeLabel(); render(); };
+
+  function init() {
+    if (!setId) { window.location.href = 'index.html'; return; }
+    currentSet = getSet(setId);
+    if (!currentSet) { window.location.href = 'index.html'; return; }
+
+    document.title = 'Stats: ' + currentSet.title + ' – FlashDeck';
+    document.getElementById('set-title').textContent = currentSet.title;
+    document.getElementById('set-sub').textContent = currentSet.cards.length + ' cards · ' + (currentSet.description || '');
+    document.getElementById('study-link').href = 'study.html?id=' + setId;
+    document.getElementById('edit-link').href = 'edit.html?id=' + setId;
+    document.getElementById('test-link').href = 'test.html?id=' + setId;
+    updateThemeLabel();
+    render();
+  }
+
+  function render() {
+    const stats = getSetStats(setId);
+    const results = stats.results || [];
+    const content = document.getElementById('main-content');
+
+    if (!results.length) {
+      content.innerHTML = `
+        <div class="no-stats">
+          <div class="empty-icon">📊</div>
+          <h3>No test history yet</h3>
+          <p>Take a test on this set to start tracking your progress.</p>
+          <a class="btn btn-primary" href="test.html?id=${setId}">Take a Test</a>
+        </div>`;
+      document.getElementById('clear-btn').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('clear-btn').style.display = '';
+
+    // ── COMPUTE SUMMARY ──────────────────────────────────────────────────────
+    const pcts    = results.map(r => r.pct);
+    const best    = Math.max(...pcts);
+    const latest  = results[results.length - 1];
+    const avg     = Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length);
+    const trend   = results.length >= 2
+      ? results[results.length-1].pct - results[results.length-2].pct
+      : null;
+
+    // Weak cards: count how many times each card was missed
+    const missMap = {};
+    results.forEach(r => {
+      (r.missed || []).forEach(m => {
+        const key = m.term + '|||' + m.definition;
+        if (!missMap[key]) missMap[key] = { term: m.term, definition: m.definition, count: 0 };
+        missMap[key].count++;
+      });
+    });
+    const weakCards = Object.values(missMap)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    const scoreColor = s => s >= 80 ? 'good' : s >= 60 ? 'warn' : 'bad';
+    const pillClass  = s => s >= 80 ? 'pill-good' : s >= 60 ? 'pill-warn' : 'pill-bad';
+
+    const trendStr = trend === null ? '—'
+      : (trend >= 0 ? '+' : '') + trend + '%';
+    const trendColor = trend === null ? '' : trend >= 0 ? 'good' : 'bad';
+
+    // ── SUMMARY CARDS ────────────────────────────────────────────────────────
+    const summaryHtml = `
+      <div class="summary-grid">
+        <div class="summary-stat">
+          <div class="stat-value ${scoreColor(latest.pct)}">${latest.pct}%</div>
+          <div class="stat-label">Last Score</div>
+          <div class="stat-sub">${latest.score}/${latest.total} correct</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-value ${scoreColor(best)}">${best}%</div>
+          <div class="stat-label">Best Score</div>
+          <div class="stat-sub">of ${results.length} test${results.length!==1?'s':''}</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-value ${scoreColor(avg)}">${avg}%</div>
+          <div class="stat-label">Average</div>
+          <div class="stat-sub">all time</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-value ${trendColor}">${trendStr}</div>
+          <div class="stat-label">Trend</div>
+          <div class="stat-sub">vs. previous</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-value">${results.length}</div>
+          <div class="stat-label">Tests Taken</div>
+          <div class="stat-sub">${statsStorageSize()} KB stored</div>
+        </div>
+        <div class="summary-stat">
+          <div class="stat-value ${weakCards.length === 0 ? 'good' : 'bad'}">${weakCards.length}</div>
+          <div class="stat-label">Problem Cards</div>
+          <div class="stat-sub">missed 1+ times</div>
+        </div>
+      </div>`;
+
+    // ── SCORE CHART ──────────────────────────────────────────────────────────
+    const chartResults = results.slice(-20); // last 20
+    const maxPct = 100;
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    const barColor = pct => {
+      if (pct >= 80) return isDark ? '#5a9e52' : '#2d5a27';
+      if (pct >= 60) return '#e67e22';
+      return isDark ? '#e05c4a' : '#c0392b';
+    };
+
+    const barsHtml = chartResults.map(r => {
+      const h = Math.max(3, (r.pct / maxPct) * 140);
+      const d = new Date(r.date);
+      const label = (d.getMonth()+1) + '/' + d.getDate();
+      const tip = label + ' · ' + r.pct + '% (' + r.score + '/' + r.total + ') · ' + (r.mode === 'mcq' ? 'MCQ' : 'Written');
+      return `
+        <div class="chart-bar-wrap">
+          <div class="chart-bar" style="height:${h}px;background:${barColor(r.pct)};opacity:0.85" data-tip="${tip}"></div>
+          <div class="chart-date">${label}</div>
+        </div>`;
+    }).join('');
+
+    const chartHtml = `
+      <div class="section-title">
+        <span>Score History</span>
+        <span style="font-size:0.78rem;font-weight:400;color:var(--text-muted)">Last ${chartResults.length} test${chartResults.length!==1?'s':''}</span>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-outer">
+          <div class="chart-y-lines">
+            <div class="chart-y-line"><span class="chart-y-label">100%</span></div>
+            <div class="chart-y-line"><span class="chart-y-label">75%</span></div>
+            <div class="chart-y-line"><span class="chart-y-label">50%</span></div>
+            <div class="chart-y-line"><span class="chart-y-label">25%</span></div>
+            <div class="chart-y-line"><span class="chart-y-label">0%</span></div>
+          </div>
+          <div class="chart-area">${barsHtml}</div>
+        </div>
+      </div>`;
+
+    // ── HISTORY TABLE ─────────────────────────────────────────────────────────
+    const tableRows = [...results].reverse().map((r, i) => {
+      const d = new Date(r.date);
+      const dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      const timeStr = d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+      const modeLabel = r.mode === 'mcq' ? 'MCQ' : 'Written';
+      const dirLabel = r.direction === 'definitions' ? 'Def→Term' : 'Term→Def';
+      const missedCount = (r.missed || []).length;
+      return `
+        <tr>
+          <td style="color:var(--text-muted);font-size:0.78rem">${results.length - i}</td>
+          <td>
+            <div style="font-weight:500">${dateStr}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted)">${timeStr}</div>
+          </td>
+          <td><span class="score-pill ${pillClass(r.pct)}">${r.pct}%</span></td>
+          <td style="color:var(--text-muted)">${r.score}/${r.total}</td>
+          <td><span class="mode-tag">${modeLabel}</span> <span class="mode-tag">${dirLabel}</span></td>
+          <td style="color:${missedCount===0?'var(--accent)':'var(--danger)'};font-weight:600">${missedCount}</td>
+        </tr>`;
+    }).join('');
+
+    const tableHtml = `
+      <div class="section-title"><span>Test History</span></div>
+      <div class="table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Score</th>
+              <th>Correct</th>
+              <th>Mode</th>
+              <th>Missed</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>`;
+
+    // ── WEAK CARDS ────────────────────────────────────────────────────────────
+    let weakHtml = '';
+    if (weakCards.length) {
+      weakHtml = `
+        <div class="section-title"><span>Problem Cards</span><span style="font-size:0.78rem;font-weight:400;color:var(--text-muted)">Missed most often</span></div>
+        <div class="weak-grid">
+          ${weakCards.map(w => `
+            <div class="weak-card">
+              <div class="weak-term">${escapeHtml(w.term)}</div>
+              <div class="weak-def">${escapeHtml(w.definition)}</div>
+              <div class="weak-miss">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                Missed ${w.count} time${w.count!==1?'s':''}
+              </div>
+            </div>`).join('')}
+        </div>`;
+    } else {
+      weakHtml = `
+        <div class="section-title"><span>Problem Cards</span></div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;text-align:center;color:var(--text-muted);font-size:0.875rem;margin-bottom:2rem">
+          🎉 No problem cards yet — you haven't missed any card more than once.
+        </div>`;
+    }
+
+    content.innerHTML = summaryHtml + chartHtml + tableHtml + weakHtml;
+  }
+
+  function confirmClear() {
+    document.getElementById('clear-modal').style.display = 'flex';
+  }
+
+  function doClear() {
+    clearSetStats(setId);
+    document.getElementById('clear-modal').style.display = 'none';
+    toast('Test history cleared.');
+    render();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') document.getElementById('clear-modal').style.display = 'none';
+  });
+
+  init();
+</script>
+</body>
+</html>

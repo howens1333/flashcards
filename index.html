@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flashcards</title>
+  <title>FlashDeck</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* ── SET GRID ── */
+    /* ── TOOLBAR ── */
     .toolbar {
       display: flex;
       align-items: center;
@@ -14,20 +14,12 @@
       margin-bottom: 1.75rem;
       flex-wrap: wrap;
     }
-
-    .toolbar .btn-group {
-      margin-left: auto;
-      display: flex;
-      gap: 0.5rem;
-    }
-
     .search-wrap {
       position: relative;
       flex: 1;
       min-width: 180px;
       max-width: 320px;
     }
-
     .search-wrap svg {
       position: absolute;
       left: 0.75rem;
@@ -36,17 +28,93 @@
       color: var(--text-muted);
       pointer-events: none;
     }
+    .search-wrap input { padding-left: 2.25rem; }
+    .btn-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-    .search-wrap input {
-      padding-left: 2.25rem;
+    /* ── FOLDERS ── */
+    .folders-section { margin-bottom: 2rem; }
+    .section-heading {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+    }
+    .folder-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.1rem;
+      cursor: pointer;
+      transition: box-shadow var(--transition), transform var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+    }
+    .folder-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .folder-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 1rem;
+    }
+    .folder-info { flex: 1; min-width: 0; }
+    .folder-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .folder-count { font-size: 0.75rem; color: var(--text-muted); }
+    .folder-actions {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: flex;
+      gap: 0.2rem;
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+    .folder-card:hover .folder-actions { opacity: 1; }
+    .folder-actions button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all var(--transition);
+    }
+    .folder-actions button:hover { color: var(--text); background: var(--surface-2); }
+    .folder-actions button.danger:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
 
+    /* ── SET GRID ── */
     .sets-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 1rem;
     }
-
     .set-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -61,13 +129,8 @@
       text-decoration: none;
       color: inherit;
     }
-
-    .set-card:hover {
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px);
-      border-color: #ccc9c2;
-    }
-
+    .set-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); border-color: #ccc9c2; }
+    [data-theme="dark"] .set-card:hover { border-color: #444038; }
     .set-card-title {
       font-family: var(--font-display);
       font-size: 1.1rem;
@@ -76,7 +139,6 @@
       line-height: 1.25;
       padding-right: 2.5rem;
     }
-
     .set-card-desc {
       font-size: 0.82rem;
       color: var(--text-muted);
@@ -84,14 +146,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
-    .set-card-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      margin-top: 0.4rem;
-    }
-
+    .set-card-meta { display: flex; align-items: center; gap: 0.6rem; margin-top: 0.4rem; }
     .set-card-actions {
       position: absolute;
       top: 1rem;
@@ -101,9 +156,7 @@
       opacity: 0;
       transition: opacity var(--transition);
     }
-
     .set-card:hover .set-card-actions { opacity: 1; }
-
     .set-card-actions button {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -117,18 +170,39 @@
       color: var(--text-muted);
       transition: all var(--transition);
     }
-
     .set-card-actions button:hover { color: var(--text); background: var(--surface-2); }
     .set-card-actions button.danger:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-light); }
 
-    /* ── CREATE MODAL FORM ── */
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-      margin-bottom: 1rem;
+    /* ── COMBINE SELECTION ── */
+    .set-card.combine-mode {
+      cursor: pointer;
     }
+    .set-card.combine-mode:hover { box-shadow: var(--shadow-md); }
+    .set-card.selected-combine {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+    .combine-bar {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.6rem 1rem 0.6rem 1.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: var(--shadow-lg);
+      z-index: 50;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .combine-bar.hidden { display: none; }
 
+    /* ── FORM ── */
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 1rem; }
     .form-group label {
       font-size: 0.8rem;
       font-weight: 600;
@@ -136,34 +210,84 @@
       letter-spacing: 0.04em;
       text-transform: uppercase;
     }
+    .color-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem; }
+    .color-swatch {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 3px solid transparent;
+      cursor: pointer;
+      transition: transform var(--transition), border-color var(--transition);
+    }
+    .color-swatch:hover { transform: scale(1.15); }
+    .color-swatch.active { border-color: var(--text); }
 
     /* ── IMPORT AREA ── */
     .import-drop {
       border: 2px dashed var(--border);
       border-radius: var(--radius);
-      padding: 2rem;
+      padding: 1.5rem;
       text-align: center;
       cursor: pointer;
       transition: all var(--transition);
       color: var(--text-muted);
       font-size: 0.875rem;
     }
-
     .import-drop:hover, .import-drop.drag-over {
       border-color: var(--accent);
       background: var(--accent-light);
       color: var(--accent);
     }
-
     .import-drop input { display: none; }
+    .import-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+    .import-tab {
+      flex: 1;
+      padding: 0.55rem;
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 500;
+      border: none;
+      background: var(--surface-2);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .import-tab.active { background: var(--surface); color: var(--text); }
+    .import-panel { display: none; }
+    .import-panel.active { display: block; }
+    
+    /* ── FOLDER FILTER ── */
+    .folder-filter-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 0.3rem 0.85rem;
+      border-radius: 99px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .filter-chip:hover { background: var(--surface-2); color: var(--text); }
+    .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
   </style>
 </head>
 <body>
-
 <nav>
-  <a href="index.html" class="nav-brand">
-    <span class="dot"></span> Flashcards
-  </a>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
   <div class="nav-links">
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
@@ -174,25 +298,31 @@
 
 <div class="container">
   <div class="page-header">
-    <h1>Your Sets</h1>
-    <p>All flashcard sets stored locally on this device.</p>
+    <h1>FlashDeck</h1>
+    <p>Your flashcard sets, stored locally.</p>
   </div>
 
   <div class="toolbar">
     <div class="search-wrap">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-      </svg>
-      <input type="text" id="search" placeholder="Search sets…" oninput="renderSets()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search" placeholder="Search sets…" oninput="renderAll()">
     </div>
-    <div class="btn-group">
+    <div class="btn-group" style="margin-left:auto">
       <button class="btn btn-secondary" onclick="openImportModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Import
       </button>
-      <button class="btn btn-secondary" onclick="exportAllSets(); toast('All sets exported.');">
+      <button class="btn btn-secondary" onclick="exportAllSets();toast('All sets exported.');">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
         Export All
+      </button>
+      <button class="btn btn-secondary" onclick="startCombineMode()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/><circle cx="12" cy="12" r="9"/></svg>
+        Combine
+      </button>
+      <button class="btn btn-secondary" onclick="openFolderModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        New Folder
       </button>
       <button class="btn btn-primary" onclick="openCreateModal()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -201,20 +331,46 @@
     </div>
   </div>
 
+  <!-- Folders -->
+  <div id="folders-section" class="folders-section"></div>
+
+  <!-- Filter chips for sets -->
+  <div id="filter-row" class="folder-filter-row" style="display:none"></div>
+
+  <!-- Sets heading -->
+  <div class="section-heading" id="sets-heading" style="margin-bottom:0.75rem">
+    <span id="sets-heading-text">All Sets</span>
+  </div>
+
   <div id="sets-grid" class="sets-grid"></div>
 </div>
 
-<!-- Create Modal -->
-<div id="create-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event, 'create-modal')">
+<!-- Combine bar -->
+<div class="combine-bar hidden" id="combine-bar">
+  <span id="combine-count-label">Select sets to combine</span>
+  <button class="btn btn-ghost btn-icon" onclick="cancelCombineMode()" title="Cancel">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <button class="btn btn-primary" onclick="openCombineModal()" id="combine-go-btn" disabled>Combine Selected</button>
+</div>
+
+<!-- Create Set Modal -->
+<div id="create-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'create-modal')">
   <div class="modal">
     <h2>New Flashcard Set</h2>
     <div class="form-group">
-      <label for="new-title">Title</label>
-      <input type="text" id="new-title" placeholder="e.g. Biology Chapter 3" maxlength="100" onkeydown="if(event.key==='Enter') createNewSet()">
+      <label>Title</label>
+      <input type="text" id="new-title" placeholder="e.g. Biology Chapter 3" maxlength="100" onkeydown="if(event.key==='Enter')createNewSet()">
     </div>
     <div class="form-group">
-      <label for="new-desc">Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
+      <label>Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
       <input type="text" id="new-desc" placeholder="Short description…" maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>Folder <span style="font-weight:400;text-transform:none">(optional)</span></label>
+      <select id="new-folder" style="font-family:var(--font-body);font-size:0.9rem;padding:0.6rem 0.9rem;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);width:100%;outline:none">
+        <option value="">No folder</option>
+      </select>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('create-modal')">Cancel</button>
@@ -223,25 +379,76 @@
   </div>
 </div>
 
-<!-- Import Modal -->
-<div id="import-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event, 'import-modal')">
+<!-- New Folder Modal -->
+<div id="folder-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'folder-modal')">
   <div class="modal">
-    <h2>Import Sets</h2>
-    <p style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem">Import a single set or a full Flashcards export bundle (.json).</p>
-    <div class="import-drop" id="drop-zone" onclick="document.getElementById('file-input').click()"
-         ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-      <input type="file" id="file-input" accept=".json" onchange="handleFileSelect(event)">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 0.75rem;display:block;opacity:0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <strong>Click to choose file</strong> or drag &amp; drop here
+    <h2 id="folder-modal-title">New Folder</h2>
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" id="folder-name" placeholder="e.g. AP Biology" maxlength="60" onkeydown="if(event.key==='Enter')saveFolderModal()">
+    </div>
+    <div class="form-group">
+      <label>Color</label>
+      <div class="color-row" id="color-row"></div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('folder-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFolderModal()">Save Folder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Combine Modal -->
+<div id="combine-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'combine-modal')">
+  <div class="modal">
+    <h2>Combine Sets</h2>
+    <p id="combine-summary" style="font-size:0.875rem;color:var(--text-muted);margin-bottom:1.25rem"></p>
+    <div class="form-group">
+      <label>New Set Title</label>
+      <input type="text" id="combine-title" placeholder="Combined set name…" maxlength="100">
+    </div>
+    <div class="form-group">
+      <label>Description <span style="font-weight:400;text-transform:none">(optional)</span></label>
+      <input type="text" id="combine-desc" placeholder="Optional description…" maxlength="200">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('combine-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="executeCombine()">Create Combined Set</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Modal -->
+<div id="import-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'import-modal')">
+  <div class="modal" style="max-width:520px">
+    <h2>Import Sets</h2>
+    <div class="import-tabs">
+      <button class="import-tab active" onclick="switchImportTab('file',this)">File</button>
+      <button class="import-tab" onclick="switchImportTab('paste',this)">Paste JSON</button>
+    </div>
+    <div id="import-panel-file" class="import-panel active">
+      <div class="import-drop" id="drop-zone" onclick="document.getElementById('file-input').click()"
+           ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+        <input type="file" id="file-input" accept=".json" onchange="handleFileSelect(event)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 0.75rem;display:block;opacity:0.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <strong>Click to choose file</strong> or drag &amp; drop
+      </div>
+    </div>
+    <div id="import-panel-paste" class="import-panel">
+      <textarea id="paste-json" rows="8" placeholder='Paste FlashDeck JSON here…&#10;&#10;(Copy from the "Copy JSON" button on any set, or paste a full export bundle)'></textarea>
+      <div class="modal-footer" style="margin-top:0.75rem;padding:0">
+        <button class="btn btn-ghost" onclick="closeModal('import-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="importPastedJson()">Import</button>
+      </div>
+    </div>
+    <div class="modal-footer" id="import-file-footer">
       <button class="btn btn-ghost" onclick="closeModal('import-modal')">Close</button>
     </div>
   </div>
 </div>
 
-<!-- Delete Confirm Modal -->
-<div id="delete-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event, 'delete-modal')">
+<!-- Delete Set Modal -->
+<div id="delete-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'delete-modal')">
   <div class="modal">
     <h2>Delete Set?</h2>
     <p id="delete-modal-msg" style="font-size:0.9rem;color:var(--text-muted)"></p>
@@ -252,131 +459,436 @@
   </div>
 </div>
 
+<!-- Delete Folder Modal -->
+<div id="delete-folder-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'delete-folder-modal')">
+  <div class="modal">
+    <h2>Delete Folder?</h2>
+    <p id="delete-folder-msg" style="font-size:0.9rem;color:var(--text-muted)"></p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('delete-folder-modal')">Cancel</button>
+      <button class="btn btn-danger" id="delete-folder-confirm-btn">Delete Folder</button>
+    </div>
+  </div>
+</div>
+
+<!-- Move to Folder Modal -->
+<div id="move-modal" class="modal-overlay" style="display:none" onclick="handleOverlayClick(event,'move-modal')">
+  <div class="modal">
+    <h2>Move to Folder</h2>
+    <div id="move-folder-list" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.5rem"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('move-modal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script src="app.js"></script>
 <script>
-  let pendingDeleteId = null;
-
-  function renderSets() {
-    const grid = document.getElementById('sets-grid');
-    const q = document.getElementById('search').value.toLowerCase();
-    let sets = getSets().sort((a, b) => b.modified - a.modified);
-    if (q) sets = sets.filter(s => s.title.toLowerCase().includes(q) || (s.description || '').toLowerCase().includes(q));
-
-    if (!sets.length) {
-      grid.innerHTML = `
-        <div class="empty-state" style="grid-column:1/-1">
-          <div class="empty-icon">📚</div>
-          <h3>${q ? 'No matching sets' : 'No sets yet'}</h3>
-          <p>${q ? 'Try a different search.' : 'Create your first flashcard set to get started.'}</p>
-          ${!q ? '<button class="btn btn-primary" onclick="openCreateModal()">+ New Set</button>' : ''}
-        </div>`;
-      return;
-    }
-
-    grid.innerHTML = sets.map(s => `
-      <a class="set-card" href="study.html?id=${s.id}">
-        <div class="set-card-actions">
-          <button title="Edit" onclick="event.preventDefault();event.stopPropagation();editSet('${s.id}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
-          <button title="Export" onclick="event.preventDefault();event.stopPropagation();exportSet(getSet('${s.id}'))">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          </button>
-          <button class="danger" title="Delete" onclick="event.preventDefault();event.stopPropagation();confirmDelete('${s.id}', '${s.title.replace(/'/g, "\\'")}')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-          </button>
-        </div>
-        <div class="set-card-title">${escapeHtml(s.title)}</div>
-        ${s.description ? `<div class="set-card-desc">${escapeHtml(s.description)}</div>` : ''}
-        <div class="set-card-meta">
-          <span class="badge">${s.cards.length} card${s.cards.length !== 1 ? 's' : ''}</span>
-          <span style="font-size:0.78rem;color:var(--text-muted)">Edited ${formatDate(s.modified)}</span>
-        </div>
-      </a>
-    `).join('');
-  }
-
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
-
-  function openCreateModal() {
-    document.getElementById('new-title').value = '';
-    document.getElementById('new-desc').value = '';
-    document.getElementById('create-modal').style.display = 'flex';
-    setTimeout(() => document.getElementById('new-title').focus(), 80);
-  }
-
-  function openImportModal() {
-    document.getElementById('import-modal').style.display = 'flex';
-  }
-
-  function closeModal(id) {
-    document.getElementById(id).style.display = 'none';
-  }
-
-  function handleOverlayClick(e, id) {
-    if (e.target.id === id) closeModal(id);
-  }
-
-  function createNewSet() {
-    const title = document.getElementById('new-title').value.trim();
-    if (!title) { document.getElementById('new-title').focus(); return; }
-    const desc = document.getElementById('new-desc').value.trim();
-    const set = createSet(title, desc);
-    saveSet(set);
-    closeModal('create-modal');
-    window.location.href = `edit.html?id=${set.id}`;
-  }
-
-  function editSet(id) {
-    window.location.href = `edit.html?id=${id}`;
-  }
-
-  function confirmDelete(id, title) {
-    pendingDeleteId = id;
-    document.getElementById('delete-modal-msg').textContent = `"${title}" and all its cards will be permanently deleted.`;
-    document.getElementById('delete-modal').style.display = 'flex';
-    document.getElementById('delete-confirm-btn').onclick = () => {
-      deleteSet(pendingDeleteId);
-      closeModal('delete-modal');
-      renderSets();
-      toast('Set deleted.');
-    };
-  }
-
-  // Drag & drop
-  function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
-  function handleDragLeave() { document.getElementById('drop-zone').classList.remove('drag-over'); }
-  function handleDrop(e) {
-    e.preventDefault();
-    document.getElementById('drop-zone').classList.remove('drag-over');
-    const file = e.dataTransfer.files[0];
-    if (file) importFromFile(file, () => { closeModal('import-modal'); renderSets(); });
-  }
-  function handleFileSelect(e) {
-    const file = e.target.files[0];
-    if (file) importFromFile(file, () => { closeModal('import-modal'); renderSets(); });
-  }
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      ['create-modal','import-modal','delete-modal'].forEach(closeModal);
-    }
-  });
+  const FOLDER_COLORS = ['#2d5a27','#1a5c8a','#7a2d8a','#8a5a1a','#c0392b','#1a7a6e','#555555'];
+  let selectedFolderColor = FOLDER_COLORS[0];
+  let editingFolderId = null;
+  let combineMode = false;
+  let selectedCombineIds = new Set();
+  let activeFilterFolder = null; // null = all, 'unfiled' = unfiled, folderId = that folder
+  let pendingDeleteSetId = null;
+  let pendingDeleteFolderId = null;
+  let pendingMoveSetId = null;
 
   function updateThemeLabel() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     const el = document.getElementById('theme-label');
     if (el) el.textContent = isDark ? 'Light' : 'Dark';
   }
+  const _origToggle = toggleTheme;
+  window.toggleTheme = function() { _origToggle(); updateThemeLabel(); };
 
-  const _origToggleTheme = toggleTheme;
-  window.toggleTheme = function() { _origToggleTheme(); updateThemeLabel(); };
+  // ── RENDER ──────────────────────────────────────────────────────────────────
 
-  renderSets();
+  function renderAll() {
+    renderFolders();
+    renderFilterRow();
+    renderSets();
+  }
+
+  function renderFolders() {
+    const folders = getFolders().sort((a,b) => a.name.localeCompare(b.name));
+    const section = document.getElementById('folders-section');
+    if (!folders.length) { section.innerHTML = ''; return; }
+
+    const q = document.getElementById('search').value.toLowerCase();
+    if (q) { section.innerHTML = ''; return; } // hide folders during search
+
+    section.innerHTML = `
+      <div class="section-heading"><span>Folders</span></div>
+      <div class="folders-grid">
+        ${folders.map(f => {
+          const count = getSetsInFolder(f.id).length;
+          return `
+          <div class="folder-card" onclick="clickFolder(event,'${f.id}')">
+            <div class="folder-actions">
+              <button title="Rename" onclick="event.stopPropagation();editFolder('${f.id}')">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </button>
+              <button class="danger" title="Delete folder" onclick="event.stopPropagation();confirmDeleteFolder('${f.id}','${escapeHtml(f.name)}')">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+              </button>
+            </div>
+            <div class="folder-icon" style="background:${f.color}22;color:${f.color}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="folder-info">
+              <div class="folder-name">${escapeHtml(f.name)}</div>
+              <div class="folder-count">${count} set${count!==1?'s':''}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function clickFolder(event, folderId) {
+    if (combineMode) return;
+    activeFilterFolder = activeFilterFolder === folderId ? null : folderId;
+    renderAll();
+  }
+
+  function renderFilterRow() {
+    const folders = getFolders();
+    const row = document.getElementById('filter-row');
+    const q = document.getElementById('search').value.toLowerCase();
+
+    if (!folders.length || q) { row.style.display='none'; return; }
+    row.style.display = 'flex';
+
+    row.innerHTML = [
+      `<button class="filter-chip ${activeFilterFolder===null?'active':''}" onclick="setFilter(null)">All Sets</button>`,
+      ...folders.map(f => `<button class="filter-chip ${activeFilterFolder===f.id?'active':''}" onclick="setFilter('${f.id}')">${escapeHtml(f.name)}</button>`),
+      `<button class="filter-chip ${activeFilterFolder==='unfiled'?'active':''}" onclick="setFilter('unfiled')">Unfiled</button>`
+    ].join('');
+  }
+
+  function setFilter(val) {
+    activeFilterFolder = val;
+    renderAll();
+  }
+
+  function renderSets() {
+    const grid = document.getElementById('sets-grid');
+    const heading = document.getElementById('sets-heading-text');
+    const q = document.getElementById('search').value.toLowerCase();
+
+    let sets = getSets().sort((a,b) => b.modified - a.modified);
+
+    if (q) {
+      sets = sets.filter(s => s.title.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q));
+      heading.textContent = `Search results`;
+    } else if (activeFilterFolder === 'unfiled') {
+      sets = getUnfiledSets().sort((a,b) => b.modified - a.modified);
+      heading.textContent = 'Unfiled Sets';
+    } else if (activeFilterFolder) {
+      sets = getSetsInFolder(activeFilterFolder).sort((a,b) => b.modified - a.modified);
+      const f = getFolder(activeFilterFolder);
+      heading.textContent = f ? f.name : 'Sets';
+    } else {
+      heading.textContent = 'All Sets';
+    }
+
+    if (!sets.length) {
+      grid.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <div class="empty-icon">📚</div>
+          <h3>${q ? 'No matching sets' : 'No sets here'}</h3>
+          <p>${q ? 'Try a different search.' : 'Create your first flashcard set to get started.'}</p>
+          ${!q ? '<button class="btn btn-primary" onclick="openCreateModal()">+ New Set</button>' : ''}
+        </div>`;
+      return;
+    }
+
+    grid.innerHTML = sets.map(s => {
+      const folderTag = (() => {
+        if (!s.folderId) return '';
+        const f = getFolder(s.folderId);
+        if (!f) return '';
+        return `<span style="font-size:0.72rem;padding:0.15rem 0.55rem;border-radius:99px;background:${f.color}22;color:${f.color};font-weight:500">${escapeHtml(f.name)}</span>`;
+      })();
+      const selected = selectedCombineIds.has(s.id);
+      return `
+        <a class="set-card${combineMode?' combine-mode':''}${selected?' selected-combine':''}"
+           href="${combineMode?'#':'study.html?id='+s.id}"
+           onclick="${combineMode?`event.preventDefault();toggleCombineSelect('${s.id}')`:''}"
+           id="setcard-${s.id}">
+          <div class="set-card-actions" ${combineMode?'style="display:none"':''}>
+            <button title="Edit" onclick="event.preventDefault();event.stopPropagation();location.href='edit.html?id=${s.id}'">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+            <button title="Move to folder" onclick="event.preventDefault();event.stopPropagation();openMoveModal('${s.id}')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </button>
+            <button title="Copy JSON" onclick="event.preventDefault();event.stopPropagation();copySetJson('${s.id}')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+            <button title="Download JSON" onclick="event.preventDefault();event.stopPropagation();exportSet(getSet('${s.id}'));toast('Set exported.')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            </button>
+            <button class="danger" title="Delete" onclick="event.preventDefault();event.stopPropagation();confirmDeleteSet('${s.id}','${escapeHtml(s.title).replace(/'/g,"\\'")}')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
+          </div>
+          <div class="set-card-title">${escapeHtml(s.title)}</div>
+          ${s.description?`<div class="set-card-desc">${escapeHtml(s.description)}</div>`:''}
+          <div class="set-card-meta">
+            <span class="badge">${s.cards.length} card${s.cards.length!==1?'s':''}</span>
+            ${folderTag}
+            <span style="font-size:0.78rem;color:var(--text-muted);margin-left:auto">${formatDate(s.modified)}</span>
+          </div>
+        </a>`;
+    }).join('');
+  }
+
+  // ── CREATE SET ───────────────────────────────────────────────────────────────
+
+  function openCreateModal() {
+    document.getElementById('new-title').value = '';
+    document.getElementById('new-desc').value = '';
+    const sel = document.getElementById('new-folder');
+    sel.innerHTML = '<option value="">No folder</option>';
+    getFolders().forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.name;
+      if (f.id === activeFilterFolder) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    document.getElementById('create-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('new-title').focus(), 80);
+  }
+
+  function createNewSet() {
+    const title = document.getElementById('new-title').value.trim();
+    if (!title) { document.getElementById('new-title').focus(); return; }
+    const desc = document.getElementById('new-desc').value.trim();
+    const folderId = document.getElementById('new-folder').value || null;
+    const set = createSet(title, desc, folderId);
+    saveSet(set);
+    closeModal('create-modal');
+    toast('Set created!');
+    window.location.href = `edit.html?id=${set.id}`;
+  }
+
+  // ── FOLDERS ──────────────────────────────────────────────────────────────────
+
+  function openFolderModal(editId=null) {
+    editingFolderId = editId;
+    const existing = editId ? getFolder(editId) : null;
+    document.getElementById('folder-modal-title').textContent = editId ? 'Rename Folder' : 'New Folder';
+    document.getElementById('folder-name').value = existing ? existing.name : '';
+    selectedFolderColor = existing ? existing.color : FOLDER_COLORS[0];
+    // Render color swatches
+    document.getElementById('color-row').innerHTML = FOLDER_COLORS.map(c =>
+      `<div class="color-swatch${c===selectedFolderColor?' active':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`
+    ).join('');
+    document.getElementById('folder-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('folder-name').focus(), 80);
+  }
+
+  function editFolder(id) { openFolderModal(id); }
+
+  function selectColor(c) {
+    selectedFolderColor = c;
+    document.querySelectorAll('.color-swatch').forEach(el => {
+      el.classList.toggle('active', el.style.background === c || el.style.backgroundColor === c);
+    });
+  }
+
+  function saveFolderModal() {
+    const name = document.getElementById('folder-name').value.trim();
+    if (!name) { document.getElementById('folder-name').focus(); return; }
+    if (editingFolderId) {
+      const f = getFolder(editingFolderId);
+      f.name = name; f.color = selectedFolderColor;
+      saveFolder(f);
+      toast('Folder updated.');
+    } else {
+      saveFolder(createFolder(name, selectedFolderColor));
+      toast('Folder "' + name + '" created.');
+    }
+    closeModal('folder-modal');
+    renderAll();
+  }
+
+  function confirmDeleteFolder(id, name) {
+    pendingDeleteFolderId = id;
+    const count = getSetsInFolder(id).length;
+    document.getElementById('delete-folder-msg').textContent =
+      `Delete folder "${name}"? ${count} set${count!==1?'s':''} will become unfiled.`;
+    document.getElementById('delete-folder-modal').style.display = 'flex';
+    document.getElementById('delete-folder-confirm-btn').onclick = () => {
+      deleteFolder(pendingDeleteFolderId);
+      closeModal('delete-folder-modal');
+      if (activeFilterFolder === pendingDeleteFolderId) activeFilterFolder = null;
+      renderAll();
+      toast('Folder deleted.');
+    };
+  }
+
+  // ── MOVE TO FOLDER ───────────────────────────────────────────────────────────
+
+  function openMoveModal(setId) {
+    pendingMoveSetId = setId;
+    const folders = getFolders();
+    const set = getSet(setId);
+    const list = document.getElementById('move-folder-list');
+    list.innerHTML = [
+      `<button class="btn btn-secondary" style="justify-content:flex-start;width:100%" onclick="moveSetToFolder(null)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Remove from folder
+      </button>`,
+      ...folders.map(f => `
+        <button class="btn btn-secondary" style="justify-content:flex-start;width:100%;${f.id===set.folderId?'border-color:var(--accent);color:var(--accent)':''}" onclick="moveSetToFolder('${f.id}')">
+          <span style="width:12px;height:12px;border-radius:50%;background:${f.color};display:inline-block;flex-shrink:0"></span>
+          ${escapeHtml(f.name)}${f.id===set.folderId?' ✓':''}
+        </button>`)
+    ].join('');
+    document.getElementById('move-modal').style.display = 'flex';
+  }
+
+  function moveSetToFolder(folderId) {
+    const set = getSet(pendingMoveSetId);
+    set.folderId = folderId;
+    set.modified = Date.now();
+    saveSet(set);
+    closeModal('move-modal');
+    renderAll();
+    toast(folderId ? 'Moved to folder.' : 'Removed from folder.');
+  }
+
+  // ── DELETE SET ───────────────────────────────────────────────────────────────
+
+  function confirmDeleteSet(id, title) {
+    pendingDeleteSetId = id;
+    document.getElementById('delete-modal-msg').textContent = `"${title}" and all its cards will be permanently deleted.`;
+    document.getElementById('delete-modal').style.display = 'flex';
+    document.getElementById('delete-confirm-btn').onclick = () => {
+      deleteSet(pendingDeleteSetId);
+      closeModal('delete-modal');
+      renderAll();
+      toast('Set deleted.');
+    };
+  }
+
+  // ── COPY JSON ────────────────────────────────────────────────────────────────
+
+  function copySetJson(id) {
+    const set = getSet(id);
+    navigator.clipboard.writeText(JSON.stringify(set, null, 2))
+      .then(() => toast('JSON copied to clipboard!'))
+      .catch(() => toast('Could not copy — try downloading instead.'));
+  }
+
+  // ── COMBINE ──────────────────────────────────────────────────────────────────
+
+  function startCombineMode() {
+    combineMode = true;
+    selectedCombineIds = new Set();
+    document.getElementById('combine-bar').classList.remove('hidden');
+    document.getElementById('combine-count-label').textContent = 'Select 2 or more sets';
+    document.getElementById('combine-go-btn').disabled = true;
+    renderSets();
+    toast('Click sets to select them for combining.');
+  }
+
+  function cancelCombineMode() {
+    combineMode = false;
+    selectedCombineIds = new Set();
+    document.getElementById('combine-bar').classList.add('hidden');
+    renderSets();
+  }
+
+  function toggleCombineSelect(id) {
+    if (selectedCombineIds.has(id)) selectedCombineIds.delete(id);
+    else selectedCombineIds.add(id);
+    const n = selectedCombineIds.size;
+    document.getElementById('combine-count-label').textContent = n === 0 ? 'Select 2 or more sets' : n + ' set' + (n!==1?'s':'') + ' selected';
+    document.getElementById('combine-go-btn').disabled = n < 2;
+    // Update visual
+    document.querySelectorAll('.set-card').forEach(el => {
+      const id2 = el.id.replace('setcard-','');
+      el.classList.toggle('selected-combine', selectedCombineIds.has(id2));
+    });
+  }
+
+  function openCombineModal() {
+    if (selectedCombineIds.size < 2) return;
+    const sets = [...selectedCombineIds].map(id => getSet(id)).filter(Boolean);
+    const totalCards = sets.reduce((n, s) => n + s.cards.length, 0);
+    document.getElementById('combine-summary').textContent =
+      'Combining: ' + sets.map(s=>'"'+s.title+'"').join(', ') + ' (' + totalCards + ' cards total)';
+    document.getElementById('combine-title').value = sets.map(s=>s.title).join(' + ');
+    document.getElementById('combine-desc').value = '';
+    document.getElementById('combine-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('combine-title').select(), 80);
+  }
+
+  function executeCombine() {
+    const title = document.getElementById('combine-title').value.trim();
+    if (!title) { document.getElementById('combine-title').focus(); return; }
+    const desc = document.getElementById('combine-desc').value.trim();
+    const result = combineSets([...selectedCombineIds], title, desc);
+    if (result) {
+      closeModal('combine-modal');
+      cancelCombineMode();
+      renderAll();
+      window.location.href = 'edit.html?id=' + result.id;
+    }
+  }
+
+  // ── IMPORT ───────────────────────────────────────────────────────────────────
+
+  function openImportModal() {
+    document.getElementById('paste-json').value = '';
+    document.getElementById('import-modal').style.display = 'flex';
+    switchImportTab('file', document.querySelector('.import-tab.active') || document.querySelectorAll('.import-tab')[0]);
+  }
+
+  function switchImportTab(tab, btn) {
+    document.querySelectorAll('.import-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.import-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('import-panel-' + tab).classList.add('active');
+    document.getElementById('import-file-footer').style.display = tab === 'file' ? 'flex' : 'none';
+  }
+
+  function importPastedJson() {
+    const json = document.getElementById('paste-json').value.trim();
+    if (!json) { toast('Paste some JSON first.'); return; }
+    importFromJson(json, () => { closeModal('import-modal'); renderAll(); });
+  }
+
+  function handleDragOver(e) { e.preventDefault(); document.getElementById('drop-zone').classList.add('drag-over'); }
+  function handleDragLeave() { document.getElementById('drop-zone').classList.remove('drag-over'); }
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) importFromFile(file, () => { closeModal('import-modal'); renderAll(); });
+  }
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) importFromFile(file, () => { closeModal('import-modal'); renderAll(); });
+  }
+
+  // ── MODALS ───────────────────────────────────────────────────────────────────
+
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+  function handleOverlayClick(e, id) { if (e.target.id === id) closeModal(id); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      ['create-modal','folder-modal','combine-modal','import-modal','delete-modal','delete-folder-modal','move-modal'].forEach(closeModal);
+      if (combineMode) cancelCombineMode();
+    }
+  });
+
+  renderAll();
   updateThemeLabel();
 </script>
 </body>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Set – FlashDeck</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .import-landing {
+      max-width: 520px;
+      margin: 4rem auto;
+      text-align: center;
+    }
+    .import-landing .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .import-landing h1 {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .import-landing p { color: var(--text-muted); margin-bottom: 2rem; }
+
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      text-align: left;
+      box-shadow: var(--shadow-sm);
+    }
+    .preview-title {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.35rem;
+    }
+    .preview-desc { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1rem; }
+    .preview-meta { display: flex; gap: 0.5rem; align-items: center; }
+
+    .preview-cards-list {
+      margin-top: 1.25rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1.25rem;
+    }
+    .preview-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    .preview-card-row:last-child { border-bottom: none; }
+    .preview-card-row .term { font-weight: 500; }
+    .preview-card-row .def { color: var(--text-muted); }
+    .preview-more { font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 0.75rem; }
+
+    .import-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+    .error-state { color: var(--danger); }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <div class="nav-links">
+    <a href="index.html">← Home</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="import-landing" id="landing"></div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _orig = toggleTheme;
+  window.toggleTheme = function() { _orig(); updateThemeLabel(); };
+
+  function init() {
+    updateThemeLabel();
+    const shareParam = getParam('share');
+    const landing = document.getElementById('landing');
+
+    if (!shareParam) {
+      landing.innerHTML = `
+        <div class="icon">📎</div>
+        <h1>No Set Found</h1>
+        <p>This page is used for importing shared FlashDeck sets via link. No set data was found in the URL.</p>
+        <a class="btn btn-primary" href="index.html">← Go Home</a>`;
+      return;
+    }
+
+    const set = shareUrlToSet(shareParam);
+    if (!set) {
+      landing.innerHTML = `
+        <div class="icon">⚠️</div>
+        <h1 class="error-state">Invalid Link</h1>
+        <p>The share link appears to be corrupted or from an older version.</p>
+        <a class="btn btn-primary" href="index.html">← Go Home</a>`;
+      return;
+    }
+
+    const PREVIEW_COUNT = 5;
+    const previewCards = set.cards.slice(0, PREVIEW_COUNT);
+    const extra = set.cards.length - PREVIEW_COUNT;
+
+    landing.innerHTML = `
+      <div class="icon">📚</div>
+      <h1>Someone shared a set with you</h1>
+      <p>Review the set below, then save it to your FlashDeck library.</p>
+      <div class="preview-card">
+        <div class="preview-title">${escapeHtml(set.title)}</div>
+        ${set.description ? `<div class="preview-desc">${escapeHtml(set.description)}</div>` : ''}
+        <div class="preview-meta">
+          <span class="badge">${set.cards.length} card${set.cards.length!==1?'s':''}</span>
+        </div>
+        <div class="preview-cards-list">
+          ${previewCards.map(c => `
+            <div class="preview-card-row">
+              <span class="term">${escapeHtml(c.term)}</span>
+              <span class="def">${escapeHtml(c.definition)}</span>
+            </div>`).join('')}
+          ${extra > 0 ? `<div class="preview-more">+ ${extra} more card${extra!==1?'s':''}…</div>` : ''}
+        </div>
+      </div>
+      <div class="import-actions">
+        <a class="btn btn-secondary" href="index.html">Cancel</a>
+        <button class="btn btn-primary" onclick="doImport()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Save to My Library
+        </button>
+      </div>`;
+
+    window._pendingSharedSet = set;
+  }
+
+  function doImport() {
+    const set = window._pendingSharedSet;
+    if (!set) return;
+    saveSet(set);
+    toast('Set saved to your library!');
+    setTimeout(() => { window.location.href = 'study.html?id=' + set.id; }, 800);
+  }
+
+  init();
+</script>
+</body>
+</html>

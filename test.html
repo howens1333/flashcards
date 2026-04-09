@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test – FlashDeck</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .test-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .test-meta h1 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      flex: 1;
+    }
+
+    /* ── SETUP SCREEN ── */
+    .setup-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    .setup-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      margin-bottom: 1.5rem;
+    }
+    .option-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .option-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+    .mode-btns {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-align: center;
+    }
+    .mode-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+    .mode-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+    .num-input-wrap { display: flex; align-items: center; gap: 0.75rem; }
+    .num-input-wrap input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      height: 4px;
+    }
+    .num-input-wrap span { font-weight: 600; font-size: 0.9rem; min-width: 2.5rem; text-align: right; }
+
+    /* ── PROGRESS BAR (test) ── */
+    .test-progress {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .test-progress .progress-bar-wrap { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .test-progress .progress-bar-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.3s ease; }
+    .test-progress .progress-label { font-size: 0.8rem; font-weight: 500; color: var(--text-muted); white-space: nowrap; }
+
+    /* ── QUESTION ── */
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2rem 1.5rem;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .question-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .question-text {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+    .question-prompt {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ── MCQ OPTIONS ── */
+    .mcq-options { display: flex; flex-direction: column; gap: 0.6rem; }
+    .mcq-option {
+      padding: 0.9rem 1.1rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      line-height: 1.4;
+    }
+    .mcq-option:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-light); }
+    .mcq-option .opt-letter {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .mcq-option:hover:not(:disabled) .opt-letter { border-color: var(--accent); background: var(--accent); color: #fff; }
+    .mcq-option.correct { border-color: #27ae60; background: #eafaf1; color: #1a7a45; }
+    .mcq-option.correct .opt-letter { background: #27ae60; border-color: #27ae60; color: #fff; }
+    [data-theme="dark"] .mcq-option.correct { background: #0f2e1a; color: #5dd68a; border-color: #27ae60; }
+    .mcq-option.wrong { border-color: var(--danger); background: var(--danger-light); color: var(--danger); }
+    .mcq-option.wrong .opt-letter { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .mcq-option:disabled { cursor: default; opacity: 0.7; }
+    .mcq-option.correct:disabled, .mcq-option.wrong:disabled { opacity: 1; }
+
+    /* ── WRITTEN ── */
+    .written-wrap { position: relative; }
+    .written-input {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      padding: 0.85rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      resize: none;
+    }
+    .written-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,90,39,0.12); }
+    .written-input.correct { border-color: #27ae60; box-shadow: 0 0 0 3px rgba(39,174,96,0.15); }
+    .written-input.wrong { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(192,57,43,0.12); }
+
+    .answer-reveal {
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      line-height: 1.45;
+      display: none;
+    }
+    .answer-reveal.show { display: block; }
+    .answer-reveal.correct-reveal { background: #eafaf1; color: #1a7a45; border: 1px solid #a9dfbf; }
+    [data-theme="dark"] .answer-reveal.correct-reveal { background: #0f2e1a; color: #5dd68a; border-color: #27ae60; }
+    .answer-reveal.wrong-reveal { background: var(--danger-light); color: var(--danger); border: 1px solid rgba(192,57,43,0.3); }
+
+    .submit-row { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; }
+
+    /* ── RESULTS ── */
+    .results-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .score-ring {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 1.25rem;
+    }
+    .score-ring circle {
+      fill: none;
+      stroke-width: 9;
+      stroke-linecap: round;
+    }
+    .score-ring .track { stroke: var(--border); }
+    .score-ring .fill { stroke: var(--accent); transition: stroke-dashoffset 0.8s ease; }
+    .score-pct { font-family: var(--font-display); font-size: 2rem; }
+    .results-card h2 { font-family: var(--font-display); font-size: 1.6rem; margin-bottom: 0.5rem; }
+    .results-card p { color: var(--text-muted); margin-bottom: 1.75rem; font-size: 0.9rem; }
+    .results-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+    .missed-section { margin-top: 2.5rem; text-align: left; }
+    .missed-section h3 { font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 1rem; }
+    .missed-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--danger);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.6rem;
+      font-size: 0.875rem;
+    }
+    .missed-term { font-weight: 600; margin-bottom: 0.2rem; }
+    .missed-def { color: var(--text-muted); }
+    .missed-yours { color: var(--danger); font-style: italic; margin-top: 0.15rem; }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <div class="nav-links">
+    <a href="index.html">← All Sets</a>
+    <a id="study-link" href="#">Study</a>
+    <a id="stats-link" href="#">Stats</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="test-meta">
+    <h1 id="set-title">Loading…</h1>
+    <span id="set-badge" class="badge"></span>
+  </div>
+
+  <!-- Setup screen -->
+  <div id="setup-screen">
+    <div class="setup-card">
+      <h2>Test Options</h2>
+      <div class="option-group">
+        <div class="option-label">Mode</div>
+        <div class="mode-btns">
+          <button class="mode-btn active" id="btn-mcq" onclick="selectMode('mcq')">
+            Multiple Choice
+          </button>
+          <button class="mode-btn" id="btn-written" onclick="selectMode('written')">
+            Written
+          </button>
+        </div>
+      </div>
+      <div class="option-group">
+        <div class="option-label">Test on</div>
+        <div class="mode-btns">
+          <button class="mode-btn active" id="btn-defs" onclick="selectDir('definitions')">
+            Definitions → Term
+          </button>
+          <button class="mode-btn" id="btn-terms" onclick="selectDir('terms')">
+            Terms → Definition
+          </button>
+        </div>
+      </div>
+      <div class="option-group">
+        <div class="option-label">Number of questions</div>
+        <div class="num-input-wrap">
+          <input type="range" id="q-count" min="1" max="20" value="10" oninput="updateCountLabel()">
+          <span id="q-count-label">10</span>
+        </div>
+      </div>
+      <div class="option-group">
+        <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;font-size:0.875rem;color:var(--text-muted)">
+          <input type="checkbox" id="shuffle-q" checked style="accent-color:var(--accent)">
+          Shuffle questions
+        </label>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem" onclick="startTest()">
+        Start Test
+      </button>
+    </div>
+  </div>
+
+  <!-- Test screen -->
+  <div id="test-screen" style="display:none">
+    <div class="test-progress">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="test-progress-bar" style="width:0%"></div>
+      </div>
+      <span class="progress-label" id="test-progress-label">0 / 0</span>
+    </div>
+    <div id="question-area"></div>
+  </div>
+
+  <!-- Results screen -->
+  <div id="results-screen" style="display:none">
+    <div class="results-card">
+      <svg class="score-ring" viewBox="0 0 100 100">
+        <circle class="track" cx="50" cy="50" r="42"/>
+        <circle class="fill" id="score-ring-fill" cx="50" cy="50" r="42"
+          stroke-dasharray="264"
+          stroke-dashoffset="264"
+          transform="rotate(-90 50 50)"/>
+      </svg>
+      <div class="score-pct" id="score-pct">0%</div>
+      <h2 id="results-heading">Results</h2>
+      <p id="results-sub"></p>
+      <div class="results-actions">
+        <button class="btn btn-secondary" onclick="retakeTest()">Retake</button>
+        <button class="btn btn-secondary" onclick="showSetup()">New Test</button>
+        <a class="btn btn-primary" href="#" id="results-study-link">Study Mode</a>
+      </div>
+    </div>
+    <div class="missed-section" id="missed-section"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+  const setId = getParam('id');
+  let currentSet = null;
+  let testMode = 'mcq';    // 'mcq' | 'written'
+  let testDir  = 'definitions'; // 'definitions' | 'terms'
+  let questions = [];
+  let qIdx = 0;
+  let score = 0;
+  let missed = [];
+  let lastTestConfig = {};
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _orig = toggleTheme;
+  window.toggleTheme = function() { _orig(); updateThemeLabel(); };
+
+  function init() {
+    if (!setId) { window.location.href = 'index.html'; return; }
+    currentSet = getSet(setId);
+    if (!currentSet) { window.location.href = 'index.html'; return; }
+
+    document.title = 'Test: ' + currentSet.title + ' – FlashDeck';
+    document.getElementById('set-title').textContent = currentSet.title;
+    document.getElementById('set-badge').textContent = currentSet.cards.length + ' cards';
+    document.getElementById('study-link').href = 'study.html?id=' + setId;
+    document.getElementById('results-study-link').href = 'study.html?id=' + setId;
+    document.getElementById('stats-link').href = 'stats.html?id=' + setId;
+
+    const max = Math.min(currentSet.cards.length, 20);
+    const slider = document.getElementById('q-count');
+    slider.max = max;
+    slider.value = Math.min(10, max);
+    updateCountLabel();
+    updateThemeLabel();
+  }
+
+  function updateCountLabel() {
+    document.getElementById('q-count-label').textContent = document.getElementById('q-count').value;
+  }
+
+  function selectMode(m) {
+    testMode = m;
+    document.getElementById('btn-mcq').classList.toggle('active', m === 'mcq');
+    document.getElementById('btn-written').classList.toggle('active', m === 'written');
+  }
+
+  function selectDir(d) {
+    testDir = d;
+    document.getElementById('btn-defs').classList.toggle('active', d === 'definitions');
+    document.getElementById('btn-terms').classList.toggle('active', d === 'terms');
+  }
+
+  function startTest() {
+    const total = parseInt(document.getElementById('q-count').value);
+    const doShuffle = document.getElementById('shuffle-q').checked;
+    const cards = doShuffle ? shuffle(currentSet.cards) : [...currentSet.cards];
+    const pool = cards.slice(0, total);
+
+    lastTestConfig = { total, doShuffle };
+    questions = pool.map(card => buildQuestion(card));
+    qIdx = 0;
+    score = 0;
+    missed = [];
+
+    document.getElementById('setup-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = 'none';
+    document.getElementById('test-screen').style.display = '';
+    showQuestion();
+  }
+
+  function buildQuestion(card) {
+    // question = what we show; answer = correct answer
+    const question = testDir === 'definitions' ? card.definition : card.term;
+    const answer   = testDir === 'definitions' ? card.term : card.definition;
+
+    if (testMode === 'mcq') {
+      // Pick 3 wrong distractors from other cards
+      const others = currentSet.cards.filter(c => c.id !== card.id);
+      const distractors = shuffle(others)
+        .slice(0, 3)
+        .map(c => testDir === 'definitions' ? c.term : c.definition);
+      const options = shuffle([answer, ...distractors]);
+      return { card, question, answer, options, type: 'mcq' };
+    } else {
+      return { card, question, answer, type: 'written' };
+    }
+  }
+
+  function showQuestion() {
+    const total = questions.length;
+    const pct = (qIdx / total) * 100;
+    document.getElementById('test-progress-bar').style.width = pct + '%';
+    document.getElementById('test-progress-label').textContent = (qIdx + 1) + ' / ' + total;
+
+    const q = questions[qIdx];
+    const area = document.getElementById('question-area');
+    const promptText = testDir === 'definitions'
+      ? 'Type or choose the <strong>term</strong> for this definition:'
+      : 'Type or choose the <strong>definition</strong> for this term:';
+
+    if (q.type === 'mcq') {
+      const LETTERS = ['A','B','C','D'];
+      area.innerHTML = `
+        <div class="question-card">
+          <div class="question-num">Question ${qIdx + 1} of ${total}</div>
+          <div class="question-text">${escapeHtml(q.question)}</div>
+          <div class="question-prompt">${promptText}</div>
+          <div class="mcq-options" id="mcq-options">
+            ${q.options.map((opt, i) => `
+              <button class="mcq-option" onclick="submitMCQ(this, ${i})" data-idx="${i}">
+                <span class="opt-letter">${LETTERS[i]}</span>
+                ${escapeHtml(opt)}
+              </button>`).join('')}
+          </div>
+        </div>`;
+    } else {
+      area.innerHTML = `
+        <div class="question-card">
+          <div class="question-num">Question ${qIdx + 1} of ${total}</div>
+          <div class="question-text">${escapeHtml(q.question)}</div>
+          <div class="question-prompt" style="margin-bottom:1rem">${promptText}</div>
+          <div class="written-wrap">
+            <textarea class="written-input" id="written-answer" rows="2"
+              placeholder="Type your answer…"
+              onkeydown="if((event.key==='Enter')&&!event.shiftKey){event.preventDefault();submitWritten()}"
+            ></textarea>
+            <div class="answer-reveal" id="answer-reveal"></div>
+          </div>
+          <div class="submit-row">
+            <button class="btn btn-primary" id="submit-btn" onclick="submitWritten()">Submit</button>
+            <span id="written-feedback" style="font-size:0.85rem;color:var(--text-muted)"></span>
+          </div>
+        </div>`;
+      setTimeout(() => document.getElementById('written-answer')?.focus(), 60);
+    }
+  }
+
+  function submitMCQ(btn, optIdx) {
+    const q = questions[qIdx];
+    const chosen = q.options[optIdx];
+    const correct = chosen === q.answer;
+    const btns = document.querySelectorAll('.mcq-option');
+    btns.forEach(b => { b.disabled = true; });
+
+    if (correct) {
+      btn.classList.add('correct');
+      score++;
+    } else {
+      btn.classList.add('wrong');
+      // Highlight correct answer
+      btns.forEach(b => {
+        if (q.options[parseInt(b.dataset.idx)] === q.answer) b.classList.add('correct');
+      });
+      missed.push({ q, yourAnswer: chosen });
+    }
+
+    setTimeout(advanceQuestion, 1100);
+  }
+
+  function submitWritten() {
+    const q = questions[qIdx];
+    const inputEl = document.getElementById('written-answer');
+    const submitBtn = document.getElementById('submit-btn');
+    const reveal = document.getElementById('answer-reveal');
+    const feedback = document.getElementById('written-feedback');
+    if (!inputEl || submitBtn.dataset.state === 'next') { advanceQuestion(); return; }
+
+    const raw = inputEl.value.trim();
+    if (!raw) return;
+
+    // Lenient matching: normalize whitespace & case
+    const normalize = s => s.trim().toLowerCase().replace(/\s+/g,' ').replace(/[.,;:!?'"]/g,'');
+    const correct = normalize(raw) === normalize(q.answer);
+
+    inputEl.classList.add(correct ? 'correct' : 'wrong');
+    inputEl.disabled = true;
+
+    if (correct) {
+      score++;
+      reveal.className = 'answer-reveal show correct-reveal';
+      reveal.textContent = '✓ Correct!';
+      feedback.textContent = '';
+    } else {
+      reveal.className = 'answer-reveal show wrong-reveal';
+      reveal.innerHTML = '✗ Correct answer: <strong>' + escapeHtml(q.answer) + '</strong>';
+      missed.push({ q, yourAnswer: raw });
+    }
+
+    submitBtn.textContent = qIdx < questions.length - 1 ? 'Next →' : 'See Results';
+    submitBtn.dataset.state = 'next';
+  }
+
+  function advanceQuestion() {
+    qIdx++;
+    if (qIdx >= questions.length) {
+      showResults();
+    } else {
+      showQuestion();
+    }
+  }
+
+  function showResults() {
+    document.getElementById('test-screen').style.display = 'none';
+    document.getElementById('results-screen').style.display = '';
+
+    // Save to statistics
+    saveTestResult(setId, {
+      date: Date.now(),
+      mode: testMode,
+      direction: testDir,
+      score,
+      total: questions.length,
+      pct: Math.round((score / questions.length) * 100),
+      missed: missed.map(m => ({
+        term: m.q.card.term,
+        definition: m.q.card.definition,
+        yourAnswer: m.yourAnswer || ''
+      }))
+    });
+
+    const total = questions.length;
+    const pct = Math.round((score / total) * 100);
+
+    document.getElementById('score-pct').textContent = pct + '%';
+
+    const heading = pct === 100 ? 'Perfect Score! 🎉' : pct >= 80 ? 'Great Job! 👏' : pct >= 60 ? 'Good Effort' : 'Keep Studying';
+    document.getElementById('results-heading').textContent = heading;
+    document.getElementById('results-sub').textContent =
+      'You got ' + score + ' out of ' + total + ' correct (' + pct + '%).';
+
+    // Animate ring
+    const circumference = 264;
+    const offset = circumference - (pct / 100) * circumference;
+    setTimeout(() => {
+      document.getElementById('score-ring-fill').style.strokeDashoffset = offset;
+      document.getElementById('score-ring-fill').style.stroke =
+        pct >= 80 ? 'var(--accent)' : pct >= 60 ? '#e67e22' : 'var(--danger)';
+    }, 100);
+
+    // Missed items
+    const missedSec = document.getElementById('missed-section');
+    if (missed.length === 0) {
+      missedSec.innerHTML = '';
+    } else {
+      missedSec.innerHTML = `
+        <h3>Missed (${missed.length})</h3>
+        ${missed.map(m => `
+          <div class="missed-item">
+            <div class="missed-term">${escapeHtml(m.q.question)}</div>
+            <div class="missed-def">Answer: <strong>${escapeHtml(m.q.answer)}</strong></div>
+            ${m.yourAnswer ? `<div class="missed-yours">Your answer: "${escapeHtml(m.yourAnswer)}"</div>` : ''}
+          </div>`).join('')}`;
+    }
+
+    document.getElementById('test-progress-bar').style.width = '100%';
+  }
+
+  function retakeTest() {
+    document.getElementById('results-screen').style.display = 'none';
+    startTest();
+  }
+
+  function showSetup() {
+    document.getElementById('results-screen').style.display = 'none';
+    document.getElementById('setup-screen').style.display = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+    // MCQ keyboard shortcuts: 1-4
+    if (['1','2','3','4'].includes(e.key)) {
+      const btns = document.querySelectorAll('.mcq-option:not(:disabled)');
+      const btn = btns[parseInt(e.key) - 1];
+      if (btn) btn.click();
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>

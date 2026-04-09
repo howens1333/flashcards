@@ -304,15 +304,23 @@ textarea { resize: vertical; line-height: 1.5; }
 }
 
 .toast {
-  background: var(--text);
-  color: #fff;
+  background: #1e1b18;
+  color: #f0ece6;
   font-size: 0.85rem;
   font-weight: 500;
   padding: 0.7rem 1.1rem;
   border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
   animation: toastIn 0.22s ease forwards;
   pointer-events: auto;
+  border: 1px solid #333028;
+}
+
+[data-theme="dark"] .toast {
+  background: #f0ece6;
+  color: #1a1714;
+  border-color: #e2ddd6;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
 }
 
 .toast.out { animation: toastOut 0.2s ease forwards; }
@@ -407,37 +415,4 @@ kbd {
   .container { padding: 1.5rem 1rem; }
   nav { padding: 0 1rem; }
   .page-header h1 { font-size: 1.7rem; }
-}
-
-
-/* Add to style.css */
-
-/* Global Smooth Page Fade */
-body {
-  animation: fadeInPage 0.4s ease-out;
-}
-
-@keyframes fadeInPage {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* Smoother Button & Card Transitions */
-.btn, .set-card, .card-row, .nav-btn, .flip-btn {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* Dark Mode Toast Fix */
-.toast {
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(8px); /* Optional: makes it look premium */
-}
-
-/* Missing Content Error State */
-.card-row textarea.missing-content {
-  border: 1px solid var(--danger);
-  background: var(--danger-light);
 }

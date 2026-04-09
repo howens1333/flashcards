@@ -220,6 +220,10 @@
       <input type="text" id="edit-desc" placeholder="Description (optional)" maxlength="200" oninput="markDirty()">
     </div>
     <div class="edit-actions">
+      <button class="btn btn-secondary" id="test-btn" onclick="goTest()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Test
+      </button>
       <button class="btn btn-secondary" id="study-btn" onclick="goStudy()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Study
@@ -490,6 +494,12 @@
     document.getElementById('save-bar').classList.add('hidden');
     document.title = `Edit: ${currentSet.title} – FlashDeck`;
     toast('Saved!');
+  }
+
+  function goTest() {
+    if (dirty) saveAll();
+    if (!currentSet.cards.length) { toast("Add some cards first."); return; }
+    window.location.href = `test.html?id=${setId}`;
   }
 
   function goStudy() {
