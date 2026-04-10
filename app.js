@@ -280,6 +280,154 @@ function buildMobileTabBar(setId, activeTab) {
   }).join('');
 }
 
+// ── FIREBASE SYNC ─────────────────────────────────────────────────────────────
+// To enable sync:
+// 1. Go to https://console.firebase.google.com → New project
+// 2. Add a Web app → copy the firebaseConfig object
+// 3. Enable Firestore (Build → Firestore Database → Start in test mode)
+// 4. Enable Authentication → Sign-in method → Google
+// 5. Fill in FIREBASE_CONFIG below and set SYNC_ENABLED = true
+
+const SYNC_ENABLED = true;
+
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyBNWIwXGL_A7zvrR28kc7Ins2_VZN7Kpz8",
+  authDomain: "flashcards-461e8.firebaseapp.com",
+  projectId: "flashcards-461e8",
+  storageBucket: "flashcards-461e8.firebasestorage.app",
+  messagingSenderId: "579240687015",
+  appId: "1:579240687015:web:c51bca5c7c11ca9428b282",
+  measurementId: "G-YCYK8Q0KCK"
+};
+
+let _db = null;
+let _auth = null;
+let _currentUser = null;
+let _syncUnsubscribe = null;
+
+async function _initFirebase() {
+  if (_db) return true;
+  if (!SYNC_ENABLED) return false;
+  if (!FIREBASE_CONFIG.apiKey) {
+    console.warn('FlashDeck: Firebase config not filled in.');
+    return false;
+  }
+  try {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
+
+    const app = initializeApp(FIREBASE_CONFIG);
+    _db = getFirestore(app);
+    _auth = getAuth(app);
+
+    window._fb = { doc, setDoc, onSnapshot, serverTimestamp, GoogleAuthProvider, signInWithPopup, onAuthStateChanged };
+
+    onAuthStateChanged(_auth, user => {
+      _currentUser = user;
+      if (user) {
+        _startSync();
+        _updateSyncUI(true, user.displayName || user.email);
+      } else {
+        if (_syncUnsubscribe) { _syncUnsubscribe(); _syncUnsubscribe = null; }
+        _updateSyncUI(false);
+      }
+    });
+
+    return true;
+  } catch (e) {
+    console.error('Firebase init failed:', e);
+    return false;
+  }
+}
+
+function _getUserDocRef() {
+  if (!_db || !_currentUser) return null;
+  return window._fb.doc(_db, 'users', _currentUser.uid, 'data', 'library');
+}
+
+// Push local data → Firestore
+async function syncPush() {
+  const ref = _getUserDocRef();
+  if (!ref) return;
+  try {
+    await window._fb.setDoc(ref, {
+      sets: getSets(),
+      folders: getFolders(),
+      updatedAt: window._fb.serverTimestamp()
+    });
+  } catch (e) { console.error('Sync push failed:', e); }
+}
+
+// Start listening for remote changes → update local
+function _startSync() {
+  if (_syncUnsubscribe) _syncUnsubscribe();
+  const ref = _getUserDocRef();
+  if (!ref) return;
+
+  _syncUnsubscribe = window._fb.onSnapshot(ref, snap => {
+    if (!snap.exists()) { syncPush(); return; } // first time — push local up
+    const remote = snap.data();
+    // Simple last-write-wins: if remote is newer, pull it in
+    const remoteTime = remote.updatedAt?.toMillis?.() || 0;
+    const localTime = Math.max(
+      ...getSets().map(s => s.modified || 0),
+      ...getFolders().map(f => f.created || 0),
+      0
+    );
+    if (remoteTime > localTime + 2000) { // 2s buffer to avoid echo
+      if (remote.sets) saveSets(remote.sets);
+      if (remote.folders) saveFolders(remote.folders);
+      // Re-render if we're on the home page
+      if (typeof renderAll === 'function') renderAll();
+  
+    }
+  });
+}
+
+async function syncSignIn() {
+  const ok = await _initFirebase();
+  if (!ok) { toast('Firebase not configured yet.'); return; }
+  try {
+    await window._fb.signInWithPopup(_auth, new window._fb.GoogleAuthProvider());
+  } catch (e) { toast('Sign-in cancelled.'); }
+}
+
+function syncSignOut() {
+  if (_auth) _auth.signOut();
+}
+
+function _updateSyncUI(signedIn, name) {
+  const btn = document.getElementById('sync-btn');
+  if (!btn) return;
+  if (signedIn) {
+    btn.textContent = '✓ Synced · Sign out';
+    btn.title = 'Signed in as ' + name;
+    btn.onclick = syncSignOut;
+  } else {
+    btn.textContent = '☁ Sign in to Sync';
+    btn.title = 'Sync across devices with Google';
+    btn.onclick = syncSignIn;
+  }
+}
+
+// Intercept saves to also push to Firestore
+const _origSaveSets = saveSets;
+window.saveSets = function(sets) {
+  _origSaveSets(sets);
+  if (SYNC_ENABLED && _currentUser) syncPush();
+};
+const _origSaveFolders = saveFolders;
+window.saveFolders = function(folders) {
+  _origSaveFolders(folders);
+  if (SYNC_ENABLED && _currentUser) syncPush();
+};
+
+// Auto-init on load
+if (SYNC_ENABLED) {
+  window.addEventListener('load', () => _initFirebase());
+}
+
 // ── PWA SERVICE WORKER REGISTRATION ───────────────────────────────────────────
 
 if ('serviceWorker' in navigator) {

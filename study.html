@@ -275,6 +275,34 @@
     .toggle-wrap input:checked + .toggle { background: var(--accent); }
     .toggle-wrap input:checked + .toggle::after { transform: translateX(14px); }
 
+    /* ── ALL TERMS LIST ── */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+    .term-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .term-card-term {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+      line-height: 1.4;
+    }
+    .term-card-def {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
     /* ── DONE ── */
     .done-screen {
       text-align: center;
@@ -504,21 +532,10 @@
     <span class="kbd-hint"><kbd>S</kbd> Toggle shuffle</span>
   </div>
 
-  <!-- Card table (reference only — no interaction with carousel) -->
+  <!-- All Terms list -->
   <hr class="section-divider">
-  <div class="section-title">All Cards</div>
-  <div class="table-wrap">
-    <table class="cards-table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Term</th>
-          <th>Definition</th>
-        </tr>
-      </thead>
-      <tbody id="cards-tbody"></tbody>
-    </table>
-  </div>
+  <div class="section-title">All Terms</div>
+  <div id="cards-list" class="cards-list"></div>
 </div>
 
 <script src="app.js"></script>
@@ -698,13 +715,12 @@
   }
 
   function renderTable() {
-    const tbody = document.getElementById('cards-tbody');
-    tbody.innerHTML = originalSet.cards.map((c, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${escapeHtml(c.term)}</td>
-        <td style="color:var(--text-muted)">${escapeHtml(c.definition)}</td>
-      </tr>
+    const list = document.getElementById('cards-list');
+    list.innerHTML = originalSet.cards.map(c => `
+      <div class="term-card">
+        <div class="term-card-term">${escapeHtml(c.term)}</div>
+        <div class="term-card-def">${escapeHtml(c.definition)}</div>
+      </div>
     `).join('');
   }
 

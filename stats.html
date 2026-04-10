@@ -317,7 +317,7 @@
     currentSet = getSet(setId);
     if (!currentSet) { window.location.href = 'index.html'; return; }
 
-    document.title = originalSet.title + ' - Stats';
+    document.title = currentSet.title + ' - Stats';
     document.getElementById('set-title').textContent = currentSet.title;
     document.getElementById('set-sub').textContent = currentSet.cards.length + ' cards · ' + (currentSet.description || '');
     document.getElementById('study-link').href = 'study.html?id=' + setId;
