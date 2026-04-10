@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Study – FlashDeck</title>
+  <title>Study – Stackd</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .study-meta {
@@ -375,7 +375,7 @@
 
 <nav>
   <a href="index.html" class="nav-brand">
-    <span class="dot"></span> FlashDeck
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="14" width="20" height="7" rx="2"/><rect x="4" y="8" width="16" height="7" rx="2"/><rect x="6" y="2" width="12" height="7" rx="2"/></svg> Stackd
   </a>
   <div class="nav-links">
     <a href="index.html">← All Sets</a>
@@ -534,7 +534,7 @@
     originalSet = getSet(setId);
     if (!originalSet) { window.location.href = 'index.html'; return; }
 
-    document.title = `${originalSet.title} – FlashDeck`;
+    document.title = `${originalSet.title} – Stackd`;
     document.getElementById('set-title').textContent = originalSet.title;
     document.getElementById('set-badge').textContent =
       `${originalSet.cards.length} card${originalSet.cards.length !== 1 ? 's' : ''}`;

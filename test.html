@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test – FlashDeck</title>
+  <title>Test – Stackd</title>
   <link rel="stylesheet" href="style.css">
   <style>
     .test-meta {
@@ -239,7 +239,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <a href="index.html" class="nav-brand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="14" width="20" height="7" rx="2"/><rect x="4" y="8" width="16" height="7" rx="2"/><rect x="6" y="2" width="12" height="7" rx="2"/></svg> Stackd</a>
   <div class="nav-links">
     <a href="index.html">← All Sets</a>
     <a id="study-link" href="#">Study</a>
@@ -271,7 +271,7 @@
             Written
           </button>
           <button class="mode-btn" id="btn-diction" onclick="selectMode('diction')">
-            Listen
+            🔊 Listen
           </button>
         </div>
       </div>
@@ -289,7 +289,7 @@
       <div class="option-group">
         <div class="option-label">Number of questions</div>
         <div class="num-input-wrap">
-          <input type="range" id="q-count" min="1" max="20" value="10" oninput="updateCountLabel()">
+          <input type="range" id="q-count" min="1" max="100" value="10" oninput="updateCountLabel()">
           <span id="q-count-label">10</span>
         </div>
       </div>
@@ -364,14 +364,14 @@
     currentSet = getSet(setId);
     if (!currentSet) { window.location.href = 'index.html'; return; }
 
-    document.title = 'Test: ' + currentSet.title + ' – FlashDeck';
+    document.title = 'Test: ' + currentSet.title + ' – Stackd';
     document.getElementById('set-title').textContent = currentSet.title;
     document.getElementById('set-badge').textContent = currentSet.cards.length + ' cards';
     document.getElementById('study-link').href = 'study.html?id=' + setId;
     document.getElementById('results-study-link').href = 'study.html?id=' + setId;
     document.getElementById('stats-link').href = 'stats.html?id=' + setId;
 
-    const max = Math.min(currentSet.cards.length, 20);
+    const max = Math.min(currentSet.cards.length, 100);
     const slider = document.getElementById('q-count');
     slider.max = max;
     slider.value = Math.min(10, max);

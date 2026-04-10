@@ -143,12 +143,9 @@ nav {
   gap: 0.5rem;
 }
 
-.nav-brand .dot {
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: inline-block;
+.nav-brand svg {
+  color: var(--accent);
+  flex-shrink: 0;
 }
 
 .nav-links {
@@ -456,9 +453,11 @@ kbd {
 .mobile-tab-bar nav-tab.active svg { opacity: 1; }
 
 @media (max-width: 680px) {
-  /* Show bottom tab bar, hide desktop nav links */
-  .mobile-tab-bar { display: flex; }
+  /* Hide nav links on mobile — hamburger on index, nothing on set pages */
+  .mobile-tab-bar { display: none !important; }
   .nav-links { display: none !important; }
+  /* But keep theme toggle visible on all pages */
+  .theme-toggle { display: flex !important; }
 
   /* No bottom tab bar — removed */
 
@@ -661,6 +660,5 @@ kbd {
 @media (max-width: 680px) {
   .hamburger-btn { display: flex; align-items: center; }
   .set-action-strip { display: flex; }
-  /* hide the desktop nav action links on mobile since hamburger covers them */
-  nav .nav-links a:not(.nav-brand) { display: none; }
+  /* nav-links fully hidden on mobile — handled above */
 }
