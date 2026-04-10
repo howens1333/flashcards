@@ -658,3 +658,7 @@ kbd {
   .set-action-strip { display: flex; }
   /* nav-links fully hidden on mobile — handled above */
 }
+
+.active-nav{
+  color: var(--accent) !important;
+}

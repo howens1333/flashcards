@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edit Set – FlashDeck</title>
+  <title>Edit Set - Flashcards</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
   <link rel="stylesheet" href="style.css">
   <style>
     .edit-header {
@@ -202,11 +203,15 @@
 
 <nav>
   <a href="index.html" class="nav-brand">
-    <span class="dot"></span> FlashDeck
+    🎓 Flashcards
   </a>
   <div class="nav-links">
-    <a href="index.html">← All Sets</a>
-    <a id="focus-link" href="#">Focus Mode</a>
+       <a href="index.html">← All Sets</a>
+    <a id="study-link" href="#">Study</a>
+    <a id="focus-link" href="#" title="Distraction-free card view">Focus</a>
+    <a class="active-nav" id="edit-link" href="#">Edit</a>
+    <a id="test-link" href="#">Test</a>
+        <a id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
@@ -316,9 +321,15 @@
     currentSet = getSet(setId);
     if (!currentSet) { window.location.href = 'index.html'; return; }
 
-    document.title = `Edit: ${currentSet.title} – FlashDeck`;
+    document.title = `${currentSet.title} - Edit`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
+    const studyEl = document.getElementById('study-link');
+    if (studyEl) studyEl.href = `study.html?id=${setId}`;
+    const testEl = document.getElementById('test-link');
+    if (testEl) testEl.href = `test.html?id=${setId}`;
+    const statsEl = document.getElementById('stats-link');
+    if (statsEl) statsEl.href = `stats.html?id=${setId}`;
     document.getElementById('edit-title').value = currentSet.title;
     document.getElementById('edit-desc').value = currentSet.description || '';
     renderCards();
@@ -495,9 +506,15 @@
     saveSet(currentSet);
     dirty = false;
     document.getElementById('save-bar').classList.add('hidden');
-    document.title = `Edit: ${currentSet.title} – FlashDeck`;
+    document.title = `Edit: ${currentSet.title} – Flashcards`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
+    const studyEl = document.getElementById('study-link');
+    if (studyEl) studyEl.href = `study.html?id=${setId}`;
+    const testEl = document.getElementById('test-link');
+    if (testEl) testEl.href = `test.html?id=${setId}`;
+    const statsEl = document.getElementById('stats-link');
+    if (statsEl) statsEl.href = `stats.html?id=${setId}`;
     toast('Saved!');
   }
 
@@ -560,9 +577,7 @@
     }
   });
 
-  buildMobileTabBar(setId, 'edit');
   init();
 </script>
-<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
 </body>
 </html>

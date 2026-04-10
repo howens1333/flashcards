@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stats – FlashDeck</title>
+  <title>Stats - Flashcards</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
   <link rel="stylesheet" href="style.css">
   <style>
     /* ── HEADER ── */
@@ -255,19 +256,20 @@
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <a href="index.html" class="nav-brand">🎓 Flashcards</a>
   <div class="nav-links">
-    <a href="index.html">← All Sets</a>
+       <a href="index.html">← All Sets</a>
     <a id="study-link" href="#">Study</a>
+    <a id="focus-link" href="#" title="Distraction-free card view">Focus</a>
     <a id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
+        <a class="active-nav" id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
     </button>
   </div>
 </nav>
-
 <div class="container">
   <div class="stats-meta">
     <div style="flex:1;min-width:0">
@@ -313,12 +315,13 @@
     currentSet = getSet(setId);
     if (!currentSet) { window.location.href = 'index.html'; return; }
 
-    document.title = 'Stats: ' + currentSet.title + ' – FlashDeck';
+    document.title = originalSet.title + ' - Stats';
     document.getElementById('set-title').textContent = currentSet.title;
     document.getElementById('set-sub').textContent = currentSet.cards.length + ' cards · ' + (currentSet.description || '');
     document.getElementById('study-link').href = 'study.html?id=' + setId;
     document.getElementById('edit-link').href = 'edit.html?id=' + setId;
     document.getElementById('test-link').href = 'test.html?id=' + setId;
+    document.getElementById('focus-link').href = 'flashcard.html?id=' + setId;
     updateThemeLabel();
     render();
   }
@@ -407,7 +410,7 @@
       </div>`;
 
     // ── SCORE CHART ──────────────────────────────────────────────────────────
-    const chartResults = results.slice(-20); // last 20
+    const chartResults = results.slice(-50); // last 20
     const maxPct = 100;
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
@@ -432,7 +435,7 @@
     const chartHtml = `
       <div class="section-title">
         <span>Score History</span>
-        <span style="font-size:0.78rem;font-weight:400;color:var(--text-muted)">Last ${chartResults.length} test${chartResults.length!==1?'s':''}</span>
+        <span style="font-size:0.78rem;font-weight:400;color:var(--text-muted)">Last ${Math.min(chartResults.length, 50)} test${chartResults.length!==1?'s':''}</span>
       </div>
       <div class="chart-wrap">
         <div class="chart-outer">
@@ -529,9 +532,7 @@
     if (e.key === 'Escape') document.getElementById('clear-modal').style.display = 'none';
   });
 
-  buildMobileTabBar(setId, 'stats');
   init();
 </script>
-<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
 </body>
 </html>
