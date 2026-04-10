@@ -143,10 +143,7 @@ nav {
   gap: 0.5rem;
 }
 
-.nav-brand svg {
-  color: var(--accent);
-  flex-shrink: 0;
-}
+/* nav brand uses emoji — no extra styles needed */
 
 .nav-links {
   display: flex;
@@ -476,11 +473,10 @@ kbd {
   .page-header h1 { font-size: 1.5rem; }
   .page-header p { font-size: 0.85rem; }
 
-  /* Full-width toolbar stacking */
-  .toolbar { flex-direction: column; align-items: stretch; gap: 0.6rem; }
-  .toolbar .search-wrap { max-width: 100%; }
-  .toolbar .btn-group { flex-wrap: wrap; }
-  .toolbar .btn-group .btn { flex: 1; min-width: 0; justify-content: center; font-size: 0.82rem; }
+  /* On mobile: hide the button group entirely (hamburger handles it), keep search */
+  .toolbar { gap: 0.6rem; }
+  .toolbar .search-wrap { max-width: 100%; flex: 1; }
+  .toolbar .btn-group { display: none !important; }
 
   /* Full-width grids */
   .sets-grid { grid-template-columns: 1fr; gap: 0.75rem; }
