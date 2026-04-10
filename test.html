@@ -122,6 +122,7 @@
     /* ── MCQ OPTIONS ── */
     .mcq-options { display: flex; flex-direction: column; gap: 0.6rem; }
     .mcq-option {
+      touch-action: manipulation;
       padding: 0.9rem 1.1rem;
       border: 2px solid var(--border);
       border-radius: var(--radius-sm);
@@ -137,7 +138,7 @@
       gap: 0.75rem;
       line-height: 1.4;
     }
-    .mcq-option:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-light); }
+    @media (hover: hover) { .mcq-option:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-light); } }
     .mcq-option .opt-letter {
       width: 26px; height: 26px;
       border-radius: 50%;
@@ -150,7 +151,7 @@
       flex-shrink: 0;
       transition: all 0.15s;
     }
-    .mcq-option:hover:not(:disabled) .opt-letter { border-color: var(--accent); background: var(--accent); color: #fff; }
+    @media (hover: hover) { .mcq-option:hover:not(:disabled) .opt-letter { border-color: var(--accent); background: var(--accent); color: #fff; } }
     .mcq-option.correct { border-color: #27ae60; background: #eafaf1; color: #1a7a45; }
     .mcq-option.correct .opt-letter { background: #27ae60; border-color: #27ae60; color: #fff; }
     [data-theme="dark"] .mcq-option.correct { background: #0f2e1a; color: #5dd68a; border-color: #27ae60; }
@@ -270,7 +271,7 @@
             Written
           </button>
           <button class="mode-btn" id="btn-diction" onclick="selectMode('diction')">
-            🔊 Listen
+            Listen
           </button>
         </div>
       </div>
@@ -709,9 +710,7 @@
     submitBtn.dataset.state = 'next';
   }
 
-  buildMobileTabBar(setId, 'test');
   init();
 </script>
-<div class="mobile-tab-bar" id="mobile-tab-bar"></div>
 </body>
 </html>
