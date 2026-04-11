@@ -359,23 +359,25 @@ async function syncPush() {
   } catch (e) { console.error('Sync push failed:', e); }
 }
 
-// Pull once on sign-in
-function _startSync() { syncPull(true); }
+// Start listening for remote changes → update local
+// On sign-in: push local data up. That's it — no automatic pull.
+function _startSync() {
+  syncPush();
+}
 
-// Manual refresh — always trust Firestore as source of truth
-async function syncPull(silent = false) {
+// Manual refresh button — always trust Firestore, overwrites local
+async function syncPull() {
   const ref = _getUserDocRef();
-  if (!ref) { if (!silent) toast('Not signed in.'); return; }
+  if (!ref) { toast('Not signed in.'); return; }
   try {
     const snap = await window._fb.getDoc(ref);
-    if (!snap.exists()) { syncPush(); return; }
+    if (!snap.exists()) { toast('Nothing in cloud yet.'); return; }
     const remote = snap.data();
-    // Always apply whatever is in Firestore — no timestamp games
     if (remote.sets)    localStorage.setItem(STORAGE_KEY,  JSON.stringify(remote.sets));
     if (remote.folders) localStorage.setItem(FOLDERS_KEY, JSON.stringify(remote.folders));
     if (typeof renderAll === 'function') renderAll();
-    if (!silent) toast('Synced!');
-  } catch (e) { console.error('Sync pull failed:', e); if (!silent) toast('Sync failed.'); }
+    toast('Synced!');
+  } catch (e) { console.error('Sync pull failed:', e); toast('Sync failed.'); }
 }
 
 async function syncSignIn() {
