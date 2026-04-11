@@ -314,14 +314,14 @@ async function _initFirebase() {
   }
   try {
     const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-    const { getFirestore, doc, setDoc, onSnapshot, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
+    const { getFirestore, doc, setDoc, getDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js');
     const { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js');
 
     const app = initializeApp(FIREBASE_CONFIG);
     _db = getFirestore(app);
     _auth = getAuth(app);
 
-    window._fb = { doc, setDoc, onSnapshot, serverTimestamp, GoogleAuthProvider, signInWithPopup, onAuthStateChanged };
+    window._fb = { doc, setDoc, getDoc, serverTimestamp, GoogleAuthProvider, signInWithPopup, onAuthStateChanged };
 
     onAuthStateChanged(_auth, user => {
       _currentUser = user;
@@ -329,7 +329,7 @@ async function _initFirebase() {
         _startSync();
         _updateSyncUI(true, user.displayName || user.email);
       } else {
-        if (_syncUnsubscribe) { _syncUnsubscribe(); _syncUnsubscribe = null; }
+        _syncUnsubscribe = null;
         _updateSyncUI(false);
       }
     });
@@ -359,30 +359,33 @@ async function syncPush() {
   } catch (e) { console.error('Sync push failed:', e); }
 }
 
-// Start listening for remote changes → update local
+// Pull on sign-in (and callable manually for the refresh button)
 function _startSync() {
-  if (_syncUnsubscribe) _syncUnsubscribe();
-  const ref = _getUserDocRef();
-  if (!ref) return;
+  syncPull();
+}
 
-  _syncUnsubscribe = window._fb.onSnapshot(ref, snap => {
-    if (!snap.exists()) { syncPush(); return; } // first time — push local up
+async function syncPull() {
+  const ref = _getUserDocRef();
+  if (!ref) { toast('Not signed in.'); return; }
+  try {
+    const snap = await window._fb.getDoc(ref);
+    if (!snap.exists()) { syncPush(); return; }
     const remote = snap.data();
-    // Simple last-write-wins: if remote is newer, pull it in
     const remoteTime = remote.updatedAt?.toMillis?.() || 0;
     const localTime = Math.max(
       ...getSets().map(s => s.modified || 0),
       ...getFolders().map(f => f.created || 0),
       0
     );
-    if (remoteTime > localTime + 2000) { // 2s buffer to avoid echo
-      if (remote.sets) saveSets(remote.sets);
-      if (remote.folders) saveFolders(remote.folders);
-      // Re-render if we're on the home page
+    if (remoteTime > localTime + 2000) {
+      if (remote.sets) localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.sets));
+      if (remote.folders) localStorage.setItem(FOLDERS_KEY, JSON.stringify(remote.folders));
       if (typeof renderAll === 'function') renderAll();
-  
+      toast('Synced!');
+    } else {
+      toast('Already up to date.');
     }
-  });
+  } catch (e) { console.error('Sync pull failed:', e); toast('Sync failed.'); }
 }
 
 async function syncSignIn() {
@@ -398,16 +401,17 @@ function syncSignOut() {
 }
 
 function _updateSyncUI(signedIn, name) {
-  const btn = document.getElementById('sync-btn');
-  if (!btn) return;
+  const btn  = document.getElementById('sync-btn');
+  const btnM = document.getElementById('sync-btn-mobile');
+  const refreshBtn = document.getElementById('sync-refresh-btn');
   if (signedIn) {
-    btn.textContent = '✓ Synced · Sign out';
-    btn.title = 'Signed in as ' + name;
-    btn.onclick = syncSignOut;
+    if (btn)  { btn.textContent = '✓ Synced · Sign out'; btn.title = 'Signed in as ' + name; btn.onclick = syncSignOut; }
+    if (btnM) { btnM.textContent = '✓ Sign out'; btnM.onclick = () => { closeHamburger(); syncSignOut(); }; }
+    if (refreshBtn) refreshBtn.style.display = '';
   } else {
-    btn.textContent = '☁ Sign in to Sync';
-    btn.title = 'Sync across devices with Google';
-    btn.onclick = syncSignIn;
+    if (btn)  { btn.textContent = '☁ Sign in to Sync'; btn.title = 'Sync across devices with Google'; btn.onclick = syncSignIn; }
+    if (btnM) { btnM.textContent = '☁ Sign in to Sync'; btnM.onclick = syncSignIn; }
+    if (refreshBtn) refreshBtn.style.display = 'none';
   }
 }
 
@@ -428,9 +432,16 @@ if (SYNC_ENABLED) {
   window.addEventListener('load', () => _initFirebase());
 }
 
-// ── UNREGISTER ANY OLD SERVICE WORKERS ────────────────────────────────────────
+// ── PWA SERVICE WORKER REGISTRATION ───────────────────────────────────────────
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(regs => {
-    regs.forEach(reg => reg.unregister());
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then((registration) => {
+        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+      })
+      .catch((err) => {
+        console.log('ServiceWorker registration failed: ', err);
+      });
   });
 }
