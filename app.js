@@ -399,15 +399,13 @@ function syncSignOut() {
 
 function _updateSyncUI(signedIn, name) {
   const btn = document.getElementById('sync-btn');
-  if (!btn) return;
+  const btnM = document.getElementById('sync-btn-mobile');
   if (signedIn) {
-    btn.textContent = '✓ Synced · Sign out';
-    btn.title = 'Signed in as ' + name;
-    btn.onclick = syncSignOut;
+    if (btn)  { btn.textContent  = '✓ Synced · Sign out'; btn.title = 'Signed in as ' + name; btn.onclick = syncSignOut; }
+    if (btnM) { btnM.textContent = '✓ Synced · Sign out'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignOut(); }; }
   } else {
-    btn.textContent = '☁ Sign in to Sync';
-    btn.title = 'Sync across devices with Google';
-    btn.onclick = syncSignIn;
+    if (btn)  { btn.textContent  = '☁ Sign in to Sync'; btn.title = 'Sync across devices with Google'; btn.onclick = syncSignIn; }
+    if (btnM) { btnM.textContent = '☁ Sign in to Sync'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignIn(); }; }
   }
 }
 

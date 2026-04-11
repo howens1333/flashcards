@@ -1,6 +1,5 @@
-const CACHE_NAME = 'flashdeck-cache-v1';
+const CACHE_NAME = 'flashdeck-cache-v3';
 
-// Add all your files here so they can be saved for offline use
 const FILES_TO_CACHE = [
   './',
   './index.html',
@@ -16,37 +15,41 @@ const FILES_TO_CACHE = [
   './icon-512.png'
 ];
 
-// 1. Install Event: Cache all necessary files
+// Install: cache all files
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // activate immediately, don't wait for old SW to die
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
-      return cache.addAll(FILES_TO_CACHE);
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(FILES_TO_CACHE))
   );
 });
 
-// 2. Activate Event: Clean up old caches if you update the app
+// Activate: delete old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
+    caches.keys().then((cacheNames) =>
+      Promise.all(
+        cacheNames.map((name) => {
+          if (name !== CACHE_NAME) return caches.delete(name);
         })
-      );
-    })
+      )
+    ).then(() => self.clients.claim()) // take control of all open tabs immediately
   );
 });
 
-// 3. Fetch Event: Serve files from cache if offline, otherwise use network
+// Fetch: network first, fall back to cache (so updates always come through when online)
 self.addEventListener('fetch', (event) => {
+  // Don't intercept Firebase/CDN requests — let them go straight to network
+  const url = new URL(event.request.url);
+  if (url.origin !== location.origin) return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      // Return the cached version if found, otherwise fetch from the network
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        // Cache the fresh response
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(event.request)) // offline fallback
   );
 });
