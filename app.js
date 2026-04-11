@@ -365,22 +365,30 @@ function _startSync() {
   const ref = _getUserDocRef();
   if (!ref) return;
 
+  let _firstSnapshot = true;
+
   _syncUnsubscribe = window._fb.onSnapshot(ref, snap => {
-    if (!snap.exists()) { syncPush(); return; } // first time — push local up
+    // Skip the very first snapshot (just initial load)
+    if (_firstSnapshot) { _firstSnapshot = false; return; }
+    if (!snap.exists()) { syncPush(); return; }
+
+    // Ignore echoes of our own writes
+    if (snap.metadata.hasPendingWrites) return;
+
     const remote = snap.data();
-    // Simple last-write-wins: if remote is newer, pull it in
     const remoteTime = remote.updatedAt?.toMillis?.() || 0;
     const localTime = Math.max(
       ...getSets().map(s => s.modified || 0),
       ...getFolders().map(f => f.created || 0),
       0
     );
-    if (remoteTime > localTime + 2000) { // 2s buffer to avoid echo
-      if (remote.sets) saveSets(remote.sets);
-      if (remote.folders) saveFolders(remote.folders);
-      // Re-render if we're on the home page
-      if (typeof renderAll === 'function') renderAll();
-  
+
+    // Only pull if remote is meaningfully newer (another device wrote it)
+    if (remoteTime > localTime + 2000) {
+      if (remote.sets) localStorage.setItem(STORAGE_KEY, JSON.stringify(remote.sets));
+      if (remote.folders) localStorage.setItem(FOLDERS_KEY, JSON.stringify(remote.folders));
+      // Only re-render if the tab is not focused — avoids interrupting hover/interaction
+      if (document.hidden && typeof renderAll === 'function') renderAll();
     }
   });
 }
@@ -399,13 +407,15 @@ function syncSignOut() {
 
 function _updateSyncUI(signedIn, name) {
   const btn = document.getElementById('sync-btn');
-  const btnM = document.getElementById('sync-btn-mobile');
+  if (!btn) return;
   if (signedIn) {
-    if (btn)  { btn.textContent  = '✓ Synced · Sign out'; btn.title = 'Signed in as ' + name; btn.onclick = syncSignOut; }
-    if (btnM) { btnM.textContent = '✓ Synced · Sign out'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignOut(); }; }
+    btn.textContent = '✓ Synced · Sign out';
+    btn.title = 'Signed in as ' + name;
+    btn.onclick = syncSignOut;
   } else {
-    if (btn)  { btn.textContent  = '☁ Sign in to Sync'; btn.title = 'Sync across devices with Google'; btn.onclick = syncSignIn; }
-    if (btnM) { btnM.textContent = '☁ Sign in to Sync'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignIn(); }; }
+    btn.textContent = '☁ Sign in to Sync';
+    btn.title = 'Sync across devices with Google';
+    btn.onclick = syncSignIn;
   }
 }
 
