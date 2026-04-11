@@ -662,3 +662,7 @@ kbd {
 .active-nav{
   color: var(--accent) !important;
 }
+
+@view-transition {
+  navigation: auto;
+}
