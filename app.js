@@ -359,13 +359,13 @@ async function syncPush() {
   } catch (e) { console.error('Sync push failed:', e); }
 }
 
-// Start listening for remote changes → update local
-// On sign-in: push local data up. That's it — no automatic pull.
-function _startSync() {
-  syncPush();
-}
+// On sign-in: push local up. No automatic pull.
+function _startSync() { syncPush(); }
 
-// Manual refresh button — always trust Firestore, overwrites local
+// Manual upload
+// (syncPush already defined above)
+
+// Manual download — always trust Firestore
 async function syncPull() {
   const ref = _getUserDocRef();
   if (!ref) { toast('Not signed in.'); return; }
@@ -376,15 +376,17 @@ async function syncPull() {
     if (remote.sets)    localStorage.setItem(STORAGE_KEY,  JSON.stringify(remote.sets));
     if (remote.folders) localStorage.setItem(FOLDERS_KEY, JSON.stringify(remote.folders));
     if (typeof renderAll === 'function') renderAll();
-    toast('Synced!');
-  } catch (e) { console.error('Sync pull failed:', e); toast('Sync failed.'); }
+    toast('Downloaded from cloud.');
+  } catch (e) { console.error('Sync pull failed:', e); toast('Download failed.'); }
 }
 
 async function syncSignIn() {
   const ok = await _initFirebase();
   if (!ok) { toast('Firebase not configured yet.'); return; }
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
   try {
-    await window._fb.signInWithPopup(_auth, new window._fb.GoogleAuthProvider());
+    if (isMobile) await window._fb.signInWithPopup(_auth, new window._fb.GoogleAuthProvider());
+    else          await window._fb.signInWithPopup(_auth, new window._fb.GoogleAuthProvider());
   } catch (e) { toast('Sign-in cancelled.'); }
 }
 
@@ -395,20 +397,27 @@ function syncSignOut() {
 function _updateSyncUI(signedIn, name) {
   const btn      = document.getElementById('sync-btn');
   const btnM     = document.getElementById('sync-btn-mobile');
-  const refreshD = document.getElementById('sync-refresh-btn-desktop');
-  const refreshM = document.getElementById('sync-refresh-btn');
+  const pushD    = document.getElementById('sync-push-btn-desktop');
+  const pullD    = document.getElementById('sync-pull-btn-desktop');
+  const pushM    = document.getElementById('sync-push-btn-mobile');
+  const pullM    = document.getElementById('sync-pull-btn-mobile');
   if (signedIn) {
-    if (btn)      { btn.textContent = '✓ Synced · Sign out'; btn.title = 'Signed in as ' + name; btn.onclick = syncSignOut; }
-    if (btnM)     { btnM.textContent = '✓ Sign out'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignOut(); }; }
-    if (refreshD) refreshD.style.display = '';
-    if (refreshM) refreshM.style.display = '';
+    if (btn)   { btn.textContent = '✓ Signed in · Sign out'; btn.title = 'Signed in as ' + name; btn.onclick = syncSignOut; }
+    if (btnM)  { btnM.textContent = '✓ Sign out'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignOut(); }; }
+    if (pushD) pushD.style.display = '';
+    if (pullD) pullD.style.display = '';
+    if (pushM) pushM.style.display = '';
+    if (pullM) pullM.style.display = '';
   } else {
-    if (btn)      { btn.textContent = '☁ Sign in to Sync'; btn.title = 'Sync across devices with Google'; btn.onclick = syncSignIn; }
-    if (btnM)     { btnM.textContent = '☁ Sign in to Sync'; btnM.onclick = syncSignIn; }
-    if (refreshD) refreshD.style.display = 'none';
-    if (refreshM) refreshM.style.display = 'none';
+    if (btn)   { btn.textContent = '☁ Sign in to Sync'; btn.title = 'Sync across devices with Google'; btn.onclick = syncSignIn; }
+    if (btnM)  { btnM.textContent = '☁ Sign in to Sync'; btnM.onclick = syncSignIn; }
+    if (pushD) pushD.style.display = 'none';
+    if (pullD) pullD.style.display = 'none';
+    if (pushM) pushM.style.display = 'none';
+    if (pullM) pullM.style.display = 'none';
   }
 }
+
 
 // Intercept saves to also push to Firestore
 const _origSaveSets = saveSets;
