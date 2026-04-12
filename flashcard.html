@@ -19,6 +19,7 @@
 
     .focus-wrap {
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       overflow: hidden;
@@ -99,7 +100,7 @@
       align-items: center;
       justify-content: center;
       padding: 2.5rem 2rem;
-      min-height: min(280px, 42vh);
+      min-height: 0;
       position: relative;
       transition: background 0.2s, border-color 0.2s;
     }
@@ -161,6 +162,7 @@
       flex-shrink: 0;
       border-top: 1px solid var(--border);
       background: var(--surface);
+      z-index: 10;
     }
 
     .focus-nav-btn {
@@ -256,16 +258,16 @@
 
     @media (max-width: 600px) {
       .kbd-hints { display: none; }
-      .focus-card {
-        padding: 1.5rem 1.25rem;
-        min-height: 0; /* let it shrink naturally */
-        max-height: 100%;
+      .focus-card { padding: 1.25rem 1rem; }
+      .focus-topbar { padding: 0.4rem 1rem 0.35rem; }
+      .focus-dots { padding: 0.25rem 1rem 0.1rem; min-height: 14px; }
+      .focus-nav {
+        padding: 0.4rem 1rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+        gap: 0.4rem;
       }
-      .focus-topbar { padding: 0.5rem 1rem 0.4rem; }
-      .focus-dots { padding: 0.3rem 1rem 0.15rem; }
-      .focus-nav { padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px)); gap: 0.4rem; }
       .focus-nav-btn { width: 40px; height: 40px; }
       .focus-reveal-btn { height: 40px; font-size: 0.82rem; }
+      .focus-card-text { font-size: clamp(1rem, 4vw, 1.4rem); }
     }
 
     /* ── SETTINGS DRAWER ── */
