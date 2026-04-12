@@ -10,6 +10,10 @@
   <link rel="stylesheet" href="style.css">
   <style>
     html, body { height: 100%; overflow: hidden; }
+    /* Use svh so mobile browser chrome is accounted for */
+    @supports (height: 100svh) {
+      html, body { height: 100svh; }
+    }
     body { display: flex; flex-direction: column; }
     nav { flex-shrink: 0; }
 
@@ -72,6 +76,7 @@
     /* ── CARD STAGE ── */
     .focus-stage {
       flex: 1;
+      min-height: 0; /* critical — prevents flex child from overflowing */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -251,7 +256,16 @@
 
     @media (max-width: 600px) {
       .kbd-hints { display: none; }
-      .focus-card { padding: 1.75rem 1.25rem; min-height: min(220px, 38vh); }
+      .focus-card {
+        padding: 1.5rem 1.25rem;
+        min-height: 0; /* let it shrink naturally */
+        max-height: 100%;
+      }
+      .focus-topbar { padding: 0.5rem 1rem 0.4rem; }
+      .focus-dots { padding: 0.3rem 1rem 0.15rem; }
+      .focus-nav { padding: 0.5rem 1rem calc(0.5rem + env(safe-area-inset-bottom, 0px)); gap: 0.4rem; }
+      .focus-nav-btn { width: 40px; height: 40px; }
+      .focus-reveal-btn { height: 40px; font-size: 0.82rem; }
     }
 
     /* ── SETTINGS DRAWER ── */
@@ -318,6 +332,10 @@
 <body>
 <nav>
   <a href="index.html" class="nav-brand"><span class="dot"></span> Flashcards</a>
+  <a href="index.html" class="mobile-back-btn" id="mobile-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Sets
+  </a>
   <div class="nav-links">
     <a href="index.html" id="back-link">← Back</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
@@ -447,6 +465,7 @@
     document.title = originalSet.title + ' — Focus · Flashcards';
     document.getElementById('focus-title').textContent = originalSet.title;
     document.getElementById('back-link').href = 'study.html?id=' + setId;
+    document.getElementById('mobile-back').href = 'study.html?id=' + setId;
     document.getElementById('learn-link').href = 'learn.html?id=' + setId;
     document.getElementById('learn-link-drawer').href = 'learn.html?id=' + setId;
     document.getElementById('test-link-drawer').href = 'test.html?id=' + setId;

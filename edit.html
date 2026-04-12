@@ -204,21 +204,25 @@
 <body>
 
 <nav>
-  <a href="index.html" class="nav-brand">
-    🎓 Flashcards
+  <a href="index.html" class="nav-brand">🎓 Flashcards</a>
+  <a href="index.html" class="mobile-back-btn" id="mobile-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Sets
   </a>
   <div class="nav-links">
-       <a href="index.html">← All Sets</a>
+    <a href="index.html">← All Sets</a>
     <a id="study-link" href="#">Study</a>
-    <a id="focus-link" href="#" title="Distraction-free card view">Focus</a>
+    <a id="learn-link" href="#">Learn</a>
+    <a id="focus-link" href="#">Focus</a>
     <a class="active-nav" id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
-        <a id="stats-link" href="#">Stats</a>
+    <a id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
     </button>
   </div>
+</nav>
 </nav>
 
 <div class="container">
@@ -326,6 +330,8 @@
     document.title = `${currentSet.title} - Edit`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
+    const learnEl = document.getElementById('learn-link');
+    if (learnEl) learnEl.href = `learn.html?id=${setId}`;
     const studyEl = document.getElementById('study-link');
     if (studyEl) studyEl.href = `study.html?id=${setId}`;
     const testEl = document.getElementById('test-link');
@@ -511,6 +517,8 @@
     document.title = `Edit: ${currentSet.title} – Flashcards`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
+    const learnEl2 = document.getElementById('learn-link');
+    if (learnEl2) learnEl2.href = `learn.html?id=${setId}`;
     const studyEl = document.getElementById('study-link');
     if (studyEl) studyEl.href = `study.html?id=${setId}`;
     const testEl = document.getElementById('test-link');

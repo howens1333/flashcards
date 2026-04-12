@@ -455,6 +455,8 @@ kbd {
   .nav-links { display: none !important; }
   /* But keep theme toggle visible on all pages */
   .theme-toggle { display: flex !important; }
+  /* Show mobile back button on set pages */
+  .mobile-back-btn { display: flex !important; }
 
   /* No bottom tab bar — removed */
 
@@ -550,6 +552,26 @@ kbd {
 @media (max-width: 680px) and (min-width: 480px) {
   .sets-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ── MOBILE BACK BUTTON ───────────────────────── */
+/* Hidden on desktop, shown on mobile via media query */
+.mobile-back-btn {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  transition: all var(--transition);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.mobile-back-btn:hover { background: var(--surface-2); color: var(--text); }
 
 /* ── HAMBURGER MENU ──────────────────────────────── */
 .hamburger-btn {

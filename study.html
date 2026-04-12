@@ -405,14 +405,18 @@
 
 <nav>
   <a href="index.html" class="nav-brand">🎓 Flashcards</a>
+  <a href="index.html" class="mobile-back-btn" id="mobile-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Sets
+  </a>
   <div class="nav-links">
     <a href="index.html">← All Sets</a>
     <a class="active-nav" id="study-link" href="#">Study</a>
-    <a id="learn-link" href="#" title="Type-to-answer learn mode">Learn</a>
-    <a id="focus-link" href="#" title="Minimal card view">Focus</a>
+    <a id="learn-link" href="#">Learn</a>
+    <a id="focus-link" href="#">Focus</a>
     <a id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
-        <a id="stats-link" href="#">Stats</a>
+    <a id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
@@ -432,10 +436,6 @@
 
   <!-- Mobile action strip (shows on small screens only) -->
   <div class="set-action-strip" id="action-strip">
-    <a class="btn btn-secondary" id="strip-learn" href="#">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-      Learn
-    </a>
     <a class="btn btn-secondary" id="strip-focus" href="#">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
       Focus
@@ -568,12 +568,10 @@
     document.getElementById('stats-link').href = `stats.html?id=${setId}`;
     // Mobile action strip
     const sf = document.getElementById('strip-focus');
-    const sl = document.getElementById('strip-learn');
     const st = document.getElementById('strip-test');
     const ss = document.getElementById('strip-stats');
     const se = document.getElementById('strip-edit');
     if (sf) sf.href = `flashcard.html?id=${setId}`;
-    if (sl) sl.href = `learn.html?id=${setId}`;
     if (st) st.href = `test.html?id=${setId}`;
     if (ss) ss.href = `stats.html?id=${setId}`;
     if (se) se.href = `edit.html?id=${setId}`;
