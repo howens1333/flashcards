@@ -395,7 +395,7 @@ function syncSignOut() {
 }
 
 function _updateSyncUI(signedIn, name) {
-  const btn      = documentgetElementById('sync-btn');
+  const btn      = document.getElementById('sync-btn');
   const btnM     = document.getElementById('sync-btn-mobile');
   const pushD    = document.getElementById('sync-push-btn-desktop');
   const pullD    = document.getElementById('sync-pull-btn-desktop');
