@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
 const HTML_PAGES = [
   './index.html',
   './study.html',
+  './learn.html',
   './edit.html',
   './test.html',
   './stats.html',

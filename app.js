@@ -103,7 +103,7 @@ function exportAllSets() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'flashdeck_all_' + new Date().toISOString().slice(0,10) + '.json';
+  a.download = 'flashcards_all_' + new Date().toISOString().slice(0,10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -128,7 +128,7 @@ function importFromJson(json, onSuccess) {
       saveSet(data);
       toast('Imported "' + data.title + '".');
     } else {
-      toast('Invalid format — expected FlashDeck JSON.'); return;
+      toast('Invalid format — expected Flashcards JSON.'); return;
     }
     if (onSuccess) onSuccess();
   } catch { toast('Could not parse JSON.'); }
@@ -309,7 +309,7 @@ async function _initFirebase() {
   if (_db) return true;
   if (!SYNC_ENABLED) return false;
   if (!FIREBASE_CONFIG.apiKey) {
-    console.warn('FlashDeck: Firebase config not filled in.');
+    console.warn('Flashcards: Firebase config not filled in.');
     return false;
   }
   try {

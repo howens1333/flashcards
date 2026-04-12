@@ -573,7 +573,7 @@
       </div>
     </div>
     <div id="import-panel-paste" class="import-panel">
-      <textarea id="paste-json" rows="8" placeholder='Paste FlashDeck JSON here…&#10;&#10;(Copy from the "Copy JSON" button on any set, or paste a full export bundle)'></textarea>
+      <textarea id="paste-json" rows="8" placeholder='Paste Flashcards JSON here…&#10;&#10;(Copy from the "Copy JSON" button on any set, or paste a full export bundle)'></textarea>
       <div class="modal-footer" style="margin-top:0.75rem;padding:0">
         <button class="btn btn-ghost" onclick="closeModal('import-modal')">Cancel</button>
         <button class="btn btn-primary" onclick="importPastedJson()">Import</button>
@@ -658,6 +658,10 @@
       <a class="set-action-item" href="study.html?id=${id}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Study
+      </a>
+      <a class="set-action-item" href="learn.html?id=${id}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Learn
       </a>
       <a class="set-action-item" href="flashcard.html?id=${id}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>

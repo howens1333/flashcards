@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Import Set - FlashDeck</title>
+  <title>Import Set - Flashcards</title>
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#2d5a27">
   <link rel="stylesheet" href="style.css">
@@ -68,7 +68,7 @@
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand"><span class="dot"></span> FlashDeck</a>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> Flashcards</a>
   <div class="nav-links">
     <a href="index.html">← Home</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
@@ -101,7 +101,7 @@
       landing.innerHTML = `
         <div class="icon">📎</div>
         <h1>No Set Found</h1>
-        <p>This page is used for importing shared FlashDeck sets via link. No set data was found in the URL.</p>
+        <p>This page is used for importing shared Flashcards sets via link. No set data was found in the URL.</p>
         <a class="btn btn-primary" href="index.html">← Go Home</a>`;
       return;
     }
@@ -123,7 +123,7 @@
     landing.innerHTML = `
       <div class="icon">📚</div>
       <h1>Someone shared a set with you</h1>
-      <p>Review the set below, then save it to your FlashDeck library.</p>
+      <p>Review the set below, then save it to your Flashcards library.</p>
       <div class="preview-card">
         <div class="preview-title">${escapeHtml(set.title)}</div>
         ${set.description ? `<div class="preview-desc">${escapeHtml(set.description)}</div>` : ''}

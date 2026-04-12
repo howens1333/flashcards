@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Focus - Flashcards</title>
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2d5a27">
+  <meta name="theme-color" content="#2d5a27">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -18,7 +18,6 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      position: relative;
     }
 
     /* ── TOP BAR ── */
@@ -26,10 +25,9 @@
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.75rem 1.25rem 0;
+      padding: 0.75rem 1.25rem 0.5rem;
       flex-shrink: 0;
     }
-
     .focus-title {
       font-family: var(--font-display);
       font-size: 1rem;
@@ -39,31 +37,27 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .focus-counter {
       font-size: 0.8rem;
       font-weight: 600;
       color: var(--text-muted);
       white-space: nowrap;
     }
-
     .focus-progress-bar-outer {
-      width: 90px;
+      width: 80px;
       height: 4px;
       background: var(--border);
       border-radius: 99px;
       overflow: hidden;
     }
-
     .focus-progress-bar-inner {
       height: 100%;
       background: var(--accent);
       border-radius: 99px;
-      transition: width 0.35s ease;
+      transition: width 0.3s ease;
     }
-
     .focus-settings-btn {
-      width: 34px; height: 34px;
+      width: 32px; height: 32px;
       border-radius: var(--radius-sm);
       border: none;
       background: transparent;
@@ -75,88 +69,22 @@
     }
     .focus-settings-btn:hover { background: var(--surface-2); color: var(--text); }
 
-    /* ── PILE INDICATORS ── */
-    .pile-row {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0.5rem 1.25rem 0;
-      flex-shrink: 0;
-    }
-
-    .pile-tag {
-      font-size: 0.7rem;
-      font-weight: 600;
-      padding: 0.2rem 0.65rem;
-      border-radius: 99px;
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-    }
-
-    .pile-tag.known {
-      background: #eafaf1;
-      color: #1a7a45;
-    }
-    [data-theme="dark"] .pile-tag.known { background: #0f2e1a; color: #5dd68a; }
-
-    .pile-tag.learning {
-      background: var(--danger-light);
-      color: var(--danger);
-    }
-
     /* ── CARD STAGE ── */
     .focus-stage {
       flex: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0.75rem 1.25rem;
-      perspective: 1400px;
+      padding: 0.5rem 1.25rem;
       overflow: hidden;
-    }
-
-    .focus-card-scene {
-      width: 100%;
-      max-width: 640px;
-      height: min(320px, 48vw);
-      position: relative;
       cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    @media (max-width: 680px) {
-      .focus-card-scene { height: min(240px, 52vw); }
-    }
-
-    .focus-card-inner {
+    .focus-card {
       width: 100%;
-      height: 100%;
-      transform-style: preserve-3d;
-      transition: transform 0.42s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-
-    .focus-card-inner.flipped { transform: rotateY(180deg); }
-
-    /* Swipe animations */
-    .focus-card-inner.swipe-right {
-      animation: swipeRight 0.3s ease forwards;
-    }
-    .focus-card-inner.swipe-left {
-      animation: swipeLeft 0.3s ease forwards;
-    }
-
-    @keyframes swipeRight {
-      to { transform: translateX(105%) rotate(15deg); opacity: 0; }
-    }
-    @keyframes swipeLeft {
-      to { transform: translateX(-105%) rotate(-15deg); opacity: 0; }
-    }
-
-    .focus-card-face {
-      position: absolute;
-      inset: 0;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+      max-width: 600px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
@@ -165,17 +93,19 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 1.75rem;
-      user-select: none;
-      overflow: hidden;
+      padding: 2.5rem 2rem;
+      min-height: min(280px, 42vh);
+      position: relative;
+      transition: background 0.2s, border-color 0.2s;
     }
 
-    .focus-card-face.focus-back {
-      transform: rotateY(180deg);
+    .focus-card.revealed {
       background: var(--accent-light);
       border-color: rgba(45,90,39,0.2);
     }
-    [data-theme="dark"] .focus-card-face.focus-back { border-color: rgba(90,158,82,0.2); }
+    [data-theme="dark"] .focus-card.revealed {
+      border-color: rgba(90,158,82,0.2);
+    }
 
     .focus-card-label {
       font-size: 0.65rem;
@@ -183,70 +113,49 @@
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--text-muted);
-      margin-bottom: 0.75rem;
+      margin-bottom: 1rem;
       opacity: 0.7;
+      transition: color 0.2s;
     }
-    .focus-back .focus-card-label { color: var(--accent); }
+    .focus-card.revealed .focus-card-label {
+      color: var(--accent);
+      opacity: 1;
+    }
 
     .focus-card-text {
       font-family: var(--font-display);
-      font-size: clamp(1rem, 3.5vw, 1.7rem);
+      font-size: clamp(1.1rem, 3.5vw, 1.8rem);
       text-align: center;
       color: var(--text);
       line-height: 1.3;
       letter-spacing: -0.01em;
-      max-height: 70%;
-      overflow: hidden;
+      transition: color 0.2s;
     }
-    .focus-back .focus-card-text { color: var(--accent-hover); }
-    [data-theme="dark"] .focus-back .focus-card-text { color: var(--accent); }
+    .focus-card.revealed .focus-card-text {
+      color: var(--accent-hover);
+    }
+    [data-theme="dark"] .focus-card.revealed .focus-card-text {
+      color: var(--accent);
+    }
 
     .focus-tap-hint {
       position: absolute;
-      bottom: 0.75rem;
-      font-size: 0.65rem;
+      bottom: 0.85rem;
+      font-size: 0.62rem;
       color: var(--text-muted);
       opacity: 0.4;
+      letter-spacing: 0.02em;
     }
 
-    /* ── DOT CAROUSEL ── */
-    .focus-dots {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 5px;
-      padding: 0 1.25rem 0.35rem;
-      flex-wrap: wrap;
-      min-height: 16px;
-      flex-shrink: 0;
-    }
-
-    .focus-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      background: var(--border);
-      transition: background 0.2s, transform 0.2s;
-      flex-shrink: 0;
-    }
-    .focus-dot.active   { background: var(--accent); transform: scale(1.4); }
-    .focus-dot.known    { background: #27ae60; opacity: 0.7; }
-    .focus-dot.learning { background: var(--danger); opacity: 0.7; }
-
-    /* ── GRADE BUTTONS (shown after flip) ── */
-    .grade-nav {
+    /* ── BOTTOM NAV ── */
+    .focus-nav {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1.25rem calc(0.6rem + env(safe-area-inset-bottom, 0px));
+      gap: 0.6rem;
+      padding: 0.6rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
       flex-shrink: 0;
-      background: var(--surface);
       border-top: 1px solid var(--border);
-    }
-
-    /* Before flip: just a flip button */
-    .pre-flip-nav {
-      display: flex;
-      gap: 0.5rem;
+      background: var(--surface);
     }
 
     .focus-nav-btn {
@@ -254,16 +163,16 @@
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: var(--surface);
-      color: var(--text);
+      color: var(--text-muted);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer;
       transition: all var(--transition);
       flex-shrink: 0;
     }
-    .focus-nav-btn:hover:not(:disabled) { background: var(--surface-2); }
-    .focus-nav-btn:disabled { opacity: 0.28; cursor: default; }
+    .focus-nav-btn:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+    .focus-nav-btn:disabled { opacity: 0.3; cursor: default; }
 
-    .focus-flip-btn {
+    .focus-reveal-btn {
       flex: 1;
       height: 44px;
       border-radius: var(--radius-sm);
@@ -277,158 +186,140 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
       transition: all var(--transition);
     }
-    .focus-flip-btn:hover { background: var(--surface-2); }
+    .focus-reveal-btn:hover { background: var(--surface-2); }
+    .focus-reveal-btn.next-mode {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .focus-reveal-btn.next-mode:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
 
-    /* After flip: grade buttons */
-    .grade-btn {
-      flex: 1;
-      height: 52px;
-      border-radius: var(--radius-sm);
-      border: 2px solid transparent;
-      font-family: var(--font-body);
-      font-size: 0.85rem;
-      font-weight: 700;
-      cursor: pointer;
+    /* ── DOTS ── */
+    .focus-dots {
       display: flex;
-      align-items: center;
       justify-content: center;
-      gap: 0.45rem;
-      transition: all var(--transition);
-      letter-spacing: 0.01em;
+      align-items: center;
+      gap: 5px;
+      padding: 0.4rem 1.25rem 0.2rem;
+      flex-wrap: wrap;
+      min-height: 18px;
+      flex-shrink: 0;
     }
-
-    .grade-btn.incorrect {
-      background: var(--danger-light);
-      color: var(--danger);
-      border-color: rgba(192,57,43,0.25);
+    .focus-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.2s, transform 0.2s;
+      flex-shrink: 0;
     }
-    .grade-btn.incorrect:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
-
-    .grade-btn.correct {
-      background: #eafaf1;
-      color: #1a7a45;
-      border-color: rgba(39,174,96,0.25);
-    }
-    [data-theme="dark"] .grade-btn.correct { background: #0f2e1a; color: #5dd68a; border-color: rgba(39,174,96,0.3); }
-    .grade-btn.correct:hover { background: #27ae60; color: #fff; border-color: #27ae60; }
-
-    /* ── ROUND BADGE ── */
-    .round-badge {
-      position: absolute;
-      top: 0.75rem;
-      right: 1.25rem;
-      font-size: 0.68rem;
-      font-weight: 700;
-      padding: 0.2rem 0.6rem;
-      border-radius: 99px;
-      background: rgba(192,57,43,0.12);
-      color: var(--danger);
-      letter-spacing: 0.04em;
-    }
-    [data-theme="dark"] .round-badge { background: rgba(224,92,74,0.18); }
+    .focus-dot.active { background: var(--accent); transform: scale(1.5); }
+    .focus-dot.seen   { background: var(--text-muted); opacity: 0.35; }
 
     /* ── DONE SCREEN ── */
-    .focus-done {
-      position: absolute;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
+    .done-screen {
+      display: none;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       text-align: center;
       padding: 2rem;
-      z-index: 10;
-      overflow-y: auto;
+      flex: 1;
+      gap: 0.5rem;
     }
-    .focus-done .done-emoji { font-size: 3rem; margin-bottom: 0.75rem; }
-    .focus-done h2 {
+    .done-emoji { font-size: 3rem; margin-bottom: 0.5rem; }
+    .done-screen h2 {
       font-family: var(--font-display);
       font-size: 1.6rem;
-      margin-bottom: 0.4rem;
+      letter-spacing: -0.02em;
     }
-    .focus-done p { color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .done-screen p { color: var(--text-muted); font-size: 0.9rem; }
+    .done-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem; }
 
-    .done-score-row {
+    /* ── KBD HINTS ── */
+    .kbd-hints {
       display: flex;
-      gap: 1.5rem;
+      gap: 1rem;
       justify-content: center;
-      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+      padding: 0 1.25rem 0.5rem;
+      flex-shrink: 0;
     }
-    .done-score-item { text-align: center; }
-    .done-score-num {
-      font-family: var(--font-display);
-      font-size: 1.8rem;
-      line-height: 1;
-    }
-    .done-score-num.green { color: var(--accent); }
-    .done-score-num.red   { color: var(--danger); }
-    .done-score-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; margin-top: 0.2rem; }
+    .kbd-hint { font-size: 0.68rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem; }
 
-    .focus-done-btns {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-      width: 100%;
-      max-width: 280px;
+    @media (max-width: 600px) {
+      .kbd-hints { display: none; }
+      .focus-card { padding: 1.75rem 1.25rem; min-height: min(220px, 38vh); }
     }
-    .focus-done-btns .btn { justify-content: center; padding: 0.75rem; }
 
     /* ── SETTINGS DRAWER ── */
     .settings-drawer {
       position: fixed;
-      bottom: 0; left: 0; right: 0;
+      top: 0; right: 0;
+      width: min(300px, 85vw);
+      height: 100vh;
       background: var(--surface);
-      border-top: 1px solid var(--border);
-      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-      padding: 1.25rem 1.5rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
-      z-index: 150;
-      transform: translateY(100%);
-      transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
-    }
-    .settings-drawer.open { transform: translateY(0); }
-    .settings-drawer h3 {
-      font-family: var(--font-display);
-      font-size: 1.1rem;
-      margin-bottom: 1.1rem;
+      border-left: 1px solid var(--border);
+      box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+      z-index: 300;
+      transform: translateX(100%);
+      transition: transform 0.24s cubic-bezier(0.4,0,0.2,1);
       display: flex;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      padding: 1.5rem 1.25rem;
+      gap: 1rem;
+      overflow-y: auto;
     }
+    .settings-drawer.open { transform: translateX(0); }
     .drawer-overlay {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.3);
-      z-index: 140;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s;
+      backdrop-filter: blur(2px);
+      z-index: 290;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.22s;
     }
     .drawer-overlay.show { opacity: 1; pointer-events: auto; }
-    .setting-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.65rem 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
+    .drawer-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 1rem; border-bottom: 1px solid var(--border);
     }
-    .setting-row:last-of-type { border-bottom: none; }
+    .drawer-header span { font-family: var(--font-display); font-size: 1.1rem; }
+    .drawer-close {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); padding: 0.25rem; display: flex;
+      border-radius: 6px; transition: all var(--transition);
+    }
+    .drawer-close:hover { background: var(--surface-2); color: var(--text); }
+    .drawer-label {
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.35rem;
+    }
+    .toggle-wrap {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.875rem; cursor: pointer; user-select: none;
+    }
+    .toggle-wrap input { display: none; }
+    .toggle {
+      width: 34px; height: 20px; background: var(--border);
+      border-radius: 99px; position: relative; transition: background var(--transition); flex-shrink: 0;
+    }
+    .toggle::after {
+      content: ''; position: absolute; left: 3px; top: 3px;
+      width: 14px; height: 14px; background: #fff; border-radius: 50%;
+      transition: transform var(--transition); box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .toggle-wrap input:checked + .toggle { background: var(--accent); }
+    .toggle-wrap input:checked + .toggle::after { transform: translateX(14px); }
   </style>
 </head>
 <body>
 <nav>
-  <a href="index.html" class="nav-brand">🎓 Flashcards</a>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> Flashcards</a>
   <div class="nav-links">
-      <a href="index.html">← All Sets</a>
-    <a id="study-link" href="#">Study</a>
-    <a class="active-nav" id="focus-link" href="#" title="Distraction-free card view">Focus</a>
-    <a id="edit-link" href="#">Edit</a>
-    <a id="test-link" href="#">Test</a>
-        <a id="stats-link" href="#">Stats</a>
+    <a href="index.html" id="back-link">← Back</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
@@ -437,259 +328,214 @@
 </nav>
 
 <div class="focus-wrap">
+
   <!-- Top bar -->
   <div class="focus-topbar">
-    <div class="focus-title" id="focus-title">Loading…</div>
+    <div class="focus-title" id="focus-title"></div>
+    <span class="focus-counter" id="focus-counter">1 / 0</span>
     <div class="focus-progress-bar-outer">
       <div class="focus-progress-bar-inner" id="focus-prog" style="width:0%"></div>
     </div>
-    <div class="focus-counter" id="focus-counter">0 / 0</div>
     <button class="focus-settings-btn" onclick="openDrawer()" title="Settings">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
     </button>
-  </div>
-
-  <!-- Pile indicators -->
-  <div class="pile-row">
-    <span class="pile-tag known" id="pile-known">✓ 0 known</span>
-    <span class="pile-tag learning" id="pile-learning" style="display:none">↺ 0 to review</span>
-    <span id="round-info" style="font-size:0.7rem;color:var(--text-muted);margin-left:auto;align-self:center"></span>
-  </div>
-
-  <!-- Card stage -->
-  <div class="focus-stage">
-    <div class="focus-card-scene" onclick="handleCardClick()" id="card-scene">
-      <div class="focus-card-inner" id="card-inner">
-        <div class="focus-card-face focus-front">
-          <div class="focus-card-label" id="front-label">Term</div>
-          <div class="focus-card-text" id="front-text"></div>
-          <span class="focus-tap-hint" id="flip-hint">Tap to flip</span>
-        </div>
-        <div class="focus-card-face focus-back">
-          <div class="focus-card-label" id="back-label">Definition</div>
-          <div class="focus-card-text" id="back-text"></div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <!-- Dots -->
   <div class="focus-dots" id="focus-dots"></div>
 
-  <!-- Bottom nav — switches between flip mode and grade mode -->
-  <div class="grade-nav" id="grade-nav">
-    <!-- Pre-flip state -->
-    <div class="pre-flip-nav" id="pre-flip" style="width:100%;gap:0.5rem">
-      <button class="focus-nav-btn" id="prev-btn" onclick="prevCard()" disabled title="Previous (←)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <button class="focus-flip-btn" onclick="flipCard()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
-        Flip to grade
-      </button>
+  <!-- Card stage — tap to reveal, tap again to advance -->
+  <div class="focus-stage" id="focus-stage" onclick="handleStageClick()">
+    <div class="focus-card" id="focus-card">
+      <div class="focus-card-label" id="card-label">Term</div>
+      <div class="focus-card-text" id="card-text"></div>
+      <span class="focus-tap-hint" id="tap-hint">Tap to reveal</span>
     </div>
-    <!-- Post-flip grade buttons -->
-    <button class="grade-btn incorrect" id="btn-incorrect" style="display:none" onclick="gradeCard(false)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      Still Learning
-    </button>
-    <button class="grade-btn correct" id="btn-correct" style="display:none" onclick="gradeCard(true)">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      Got It
-    </button>
   </div>
 
-  <!-- Done overlay -->
-  <div class="focus-done" id="done-screen" style="display:none">
-    <div class="done-emoji" id="done-emoji">🎉</div>
-    <h2 id="done-heading">Round complete!</h2>
-    <p id="done-msg"></p>
-    <div class="done-score-row">
-      <div class="done-score-item">
-        <div class="done-score-num green" id="done-known">0</div>
-        <div class="done-score-label">Known</div>
-      </div>
-      <div class="done-score-item">
-        <div class="done-score-num red" id="done-learning">0</div>
-        <div class="done-score-label">To Review</div>
-      </div>
+  <!-- Done screen -->
+  <div class="done-screen" id="done-screen">
+    <div class="done-emoji">🎉</div>
+    <h2>All done!</h2>
+    <p id="done-count"></p>
+    <div class="done-actions">
+      <button class="btn btn-secondary" onclick="restart(false)">↺ Restart</button>
+      <button class="btn btn-secondary" onclick="restart(true)">Shuffle & Restart</button>
+      <a class="btn btn-primary" id="learn-link" href="#">Try Learn Mode</a>
     </div>
-    <div class="focus-done-btns" id="done-btns"></div>
+  </div>
+
+  <!-- Keyboard hints -->
+  <div class="kbd-hints" id="kbd-hints">
+    <span class="kbd-hint"><kbd>Space</kbd> Reveal / Next</span>
+    <span class="kbd-hint"><kbd>←</kbd> Previous</span>
+    <span class="kbd-hint"><kbd>S</kbd> Shuffle</span>
+  </div>
+
+  <!-- Bottom nav -->
+  <div class="focus-nav" id="focus-nav">
+    <button class="focus-nav-btn" id="prev-btn" onclick="prevCard()" disabled title="Previous">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="focus-reveal-btn" id="reveal-btn" onclick="handleRevealBtn()">
+      Reveal answer
+    </button>
+    <button class="focus-nav-btn" id="next-btn" onclick="nextCard()" title="Next">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
   </div>
 </div>
 
-<!-- Settings drawer -->
+<!-- Settings Drawer -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 <div class="settings-drawer" id="settings-drawer">
-  <h3>
-    Settings
-    <button onclick="closeDrawer()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);display:flex;padding:0.25rem;border-radius:6px">
+  <div class="drawer-header">
+    <span>Settings</span>
+    <button class="drawer-close" onclick="closeDrawer()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
     </button>
-  </h3>
-  <div class="setting-row">
-    <label>Shuffle cards</label>
+  </div>
+
+  <div>
+    <div class="drawer-label">Display</div>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="defsfirst-tog" onchange="redisplay()">
+      <span class="toggle"></span>
+      Show definition first
+    </label>
+  </div>
+
+  <div>
+    <div class="drawer-label">Order</div>
     <label class="toggle-wrap">
       <input type="checkbox" id="shuffle-tog" onchange="handleShuffle()">
       <span class="toggle"></span>
+      Shuffle cards
     </label>
   </div>
-  <div class="setting-row">
-    <label>Definitions first</label>
-    <label class="toggle-wrap">
-      <input type="checkbox" id="defsfirst-tog" onchange="redisplayCard()">
-      <span class="toggle"></span>
-    </label>
-  </div>
-  <div class="setting-row">
-    <button class="btn btn-ghost" style="width:100%;justify-content:center" onclick="restartFull();closeDrawer()">↺ Restart from beginning</button>
-  </div>
+
+  <hr style="border:none;border-top:1px solid var(--border)">
+
+  <a class="btn btn-secondary" id="learn-link-drawer" href="#" style="justify-content:flex-start">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Switch to Learn Mode
+  </a>
+  <a class="btn btn-secondary" id="test-link-drawer" href="#" style="justify-content:flex-start">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Take a Test
+  </a>
 </div>
 
 <script src="app.js"></script>
 <script>
   const setId = getParam('id');
   let originalSet = null;
-
-  // ── DECK STATE ────────────────────────────────────────────────────────────────
-  // currentDeck: cards to go through this round (in order)
-  // knownIds:    Set of card IDs marked "got it" (persist across rounds)
-  // learningIds: Set of card IDs marked "still learning" (re-queued each round)
-  // round:       which pass we're on (1 = first, 2+ = review rounds)
-  let currentDeck = [];
+  let deck = [];
   let idx = 0;
-  let isFlipped = false;
-  let knownIds = new Set();
-  let learningIds = new Set();
-  let round = 1;
-  let gradeMap = {}; // cardId -> 'known' | 'learning' | null (for dots)
+  let revealed = false;
+  let seenIndices = new Set();
 
-  function updateThemeLabel() {
-    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-    const el = document.getElementById('theme-label');
-    if (el) el.textContent = isDark ? 'Light' : 'Dark';
-  }
-  const _orig = toggleTheme;
-  window.toggleTheme = function() { _orig(); updateThemeLabel(); };
+  // ── INIT ──────────────────────────────────────────────────────────────────────
 
   function init() {
     if (!setId) { window.location.href = 'index.html'; return; }
     originalSet = getSet(setId);
-    if (!originalSet) { window.location.href = 'index.html'; return; }
+    if (!originalSet || !originalSet.cards.length) { window.location.href = 'index.html'; return; }
 
-    document.title = originalSet.title + ' - Focus';
+    document.title = originalSet.title + ' — Focus · Flashcards';
     document.getElementById('focus-title').textContent = originalSet.title;
-    document.getElementById('study-link').href  = 'study.html?id='    + setId;
-    document.getElementById('test-link').href   = 'test.html?id='     + setId;
-    document.getElementById('stats-link').href  = 'stats.html?id='    + setId;
-    document.getElementById('edit-link').href   = 'edit.html?id='     + setId;
+    document.getElementById('back-link').href = 'study.html?id=' + setId;
+    document.getElementById('learn-link').href = 'learn.html?id=' + setId;
+    document.getElementById('learn-link-drawer').href = 'learn.html?id=' + setId;
+    document.getElementById('test-link-drawer').href = 'test.html?id=' + setId;
+    document.getElementById('done-count').textContent =
+      'You went through all ' + originalSet.cards.length + ' cards.';
+
+    deck = [...originalSet.cards];
     updateThemeLabel();
-    startRound(originalSet.cards);
-  }
-
-  // ── ROUND MANAGEMENT ──────────────────────────────────────────────────────────
-
-  function startRound(cards) {
-    currentDeck = [...cards];
-    idx = 0;
-    isFlipped = false;
-    // Reset grade map for this round's cards
-    currentDeck.forEach(c => { if (!gradeMap[c.id]) gradeMap[c.id] = null; });
     showCard();
-    updatePileTags();
   }
+
+  // ── CARD DISPLAY ──────────────────────────────────────────────────────────────
 
   function showCard() {
-    const card = currentDeck[idx];
+    const card = deck[idx];
     if (!card) return;
-
     const showDef = document.getElementById('defsfirst-tog').checked;
-    document.getElementById('front-label').textContent = showDef ? 'Definition' : 'Term';
-    document.getElementById('back-label').textContent  = showDef ? 'Term' : 'Definition';
-    document.getElementById('front-text').textContent  = showDef ? card.definition : card.term;
-    document.getElementById('back-text').textContent   = showDef ? card.term : card.definition;
 
-    // Progress within this round
-    const pct = (idx + 1) / currentDeck.length * 100;
-    document.getElementById('focus-prog').style.width = pct + '%';
-    document.getElementById('focus-counter').textContent = (idx + 1) + ' / ' + currentDeck.length;
+    revealed = false;
+    document.getElementById('card-label').textContent = showDef ? 'Definition' : 'Term';
+    document.getElementById('card-text').textContent  = showDef ? card.definition : card.term;
+    document.getElementById('focus-card').classList.remove('revealed');
+    document.getElementById('tap-hint').textContent = 'Tap to reveal';
 
-    // Round label
-    document.getElementById('round-info').textContent = round > 1 ? 'Review round ' + round : '';
+    // Reveal button
+    const revBtn = document.getElementById('reveal-btn');
+    revBtn.textContent = 'Reveal answer';
+    revBtn.className = 'focus-reveal-btn';
 
+    // Prev/next
     document.getElementById('prev-btn').disabled = idx === 0;
 
-    // Reset to pre-flip state
-    setFlipped(false);
+    // Progress
+    const pct = (idx + 1) / deck.length * 100;
+    document.getElementById('focus-prog').style.width = pct + '%';
+    document.getElementById('focus-counter').textContent = (idx + 1) + ' / ' + deck.length;
+
+    // Done screen
     document.getElementById('done-screen').style.display = 'none';
+    document.getElementById('focus-stage').style.display = '';
+    document.getElementById('focus-nav').style.display = '';
+    document.getElementById('kbd-hints').style.display = '';
+
     renderDots();
   }
 
-  function redisplayCard() {
-    // Re-renders front/back labels without resetting grade state
-    const card = currentDeck[idx];
-    if (!card) return;
+  function revealCard() {
+    if (revealed) return;
+    revealed = true;
+    const card = deck[idx];
     const showDef = document.getElementById('defsfirst-tog').checked;
-    document.getElementById('front-label').textContent = showDef ? 'Definition' : 'Term';
-    document.getElementById('back-label').textContent  = showDef ? 'Term' : 'Definition';
-    document.getElementById('front-text').textContent  = showDef ? card.definition : card.term;
-    document.getElementById('back-text').textContent   = showDef ? card.term : card.definition;
-  }
 
-  function setFlipped(flipped) {
-    isFlipped = flipped;
-    document.getElementById('card-inner').classList.toggle('flipped', flipped);
-    // Show grade buttons only after flip
-    document.getElementById('pre-flip').style.display = flipped ? 'none' : 'flex';
-    document.getElementById('btn-incorrect').style.display = flipped ? '' : 'none';
-    document.getElementById('btn-correct').style.display   = flipped ? '' : 'none';
-    document.getElementById('flip-hint').textContent = flipped ? 'Rate your answer below' : 'Tap to flip';
-  }
+    document.getElementById('card-label').textContent = showDef ? 'Term' : 'Definition';
+    document.getElementById('card-text').textContent  = showDef ? card.term : card.definition;
+    document.getElementById('focus-card').classList.add('revealed');
+    document.getElementById('tap-hint').textContent = 'Tap to continue';
 
-  function handleCardClick() {
-    if (!isFlipped) flipCard();
-    // Don't auto-advance on second tap — let them use the grade buttons
-  }
+    const revBtn = document.getElementById('reveal-btn');
+    revBtn.textContent = 'Next →';
+    revBtn.className = 'focus-reveal-btn next-mode';
 
-  function flipCard() {
-    setFlipped(!isFlipped);
-  }
-
-  // ── GRADING ───────────────────────────────────────────────────────────────────
-
-  function gradeCard(isCorrect) {
-    const card = currentDeck[idx];
-    if (!card) return;
-
-    if (isCorrect) {
-      knownIds.add(card.id);
-      learningIds.delete(card.id);
-      gradeMap[card.id] = 'known';
-    } else {
-      learningIds.add(card.id);
-      knownIds.delete(card.id);
-      gradeMap[card.id] = 'learning';
-    }
-
-    updatePileTags();
+    seenIndices.add(idx);
     renderDots();
-
-    // Swipe animation
-    const inner = document.getElementById('card-inner');
-    inner.classList.add(isCorrect ? 'swipe-right' : 'swipe-left');
-
-    setTimeout(() => {
-      inner.classList.remove('swipe-right', 'swipe-left');
-      advanceCard();
-    }, 320);
   }
 
-  function advanceCard() {
-    if (idx < currentDeck.length - 1) {
+  function redisplay() {
+    // Re-render front without advancing (for toggle change)
+    showCard();
+  }
+
+  // ── NAVIGATION ────────────────────────────────────────────────────────────────
+
+  function handleStageClick() {
+    if (!revealed) { revealCard(); }
+    else           { nextCard(); }
+  }
+
+  function handleRevealBtn() {
+    if (!revealed) { revealCard(); }
+    else           { nextCard(); }
+  }
+
+  function nextCard() {
+    seenIndices.add(idx);
+    if (idx < deck.length - 1) {
       idx++;
       showCard();
     } else {
-      endRound();
+      showDone();
     }
   }
 
@@ -697,147 +543,135 @@
     if (idx > 0) { idx--; showCard(); }
   }
 
-  function endRound() {
-    const knownCount    = knownIds.size;
-    const learningCount = learningIds.size;
-    const total         = originalSet.cards.length;
-
-    document.getElementById('done-known').textContent    = knownCount;
-    document.getElementById('done-learning').textContent = learningCount;
-
-    const btnContainer = document.getElementById('done-btns');
-
-    if (learningCount === 0) {
-      // All known — full session complete
-      document.getElementById('done-emoji').textContent = '🎉';
-      document.getElementById('done-heading').textContent = 'Perfect session!';
-      document.getElementById('done-msg').textContent =
-        'You knew all ' + total + ' cards. Great work!';
-      btnContainer.innerHTML = `
-        <button class="btn btn-secondary" onclick="restartFull()">↺ Start over</button>
-        <a class="btn btn-primary" href="test.html?id=${setId}">Take a Test</a>`;
-    } else {
-      // Still some to learn — start review round
-      document.getElementById('done-emoji').textContent = '📚';
-      document.getElementById('done-heading').textContent = 'Round ' + round + ' done';
-      document.getElementById('done-msg').textContent =
-        knownCount + ' known · ' + learningCount + ' to review';
-      btnContainer.innerHTML = `
-        <button class="btn btn-primary" onclick="startNextRound()">
-          ↺ Review ${learningCount} card${learningCount !== 1 ? 's' : ''}
-        </button>
-        <button class="btn btn-secondary" onclick="restartFull()">Start over</button>
-        <a class="btn btn-secondary" href="test.html?id=${setId}">Take a Test</a>`;
-    }
-
+  function showDone() {
+    for (let i = 0; i < deck.length; i++) seenIndices.add(i);
     document.getElementById('done-screen').style.display = 'flex';
+    document.getElementById('focus-stage').style.display = 'none';
+    document.getElementById('focus-nav').style.display = 'none';
+    document.getElementById('kbd-hints').style.display = 'none';
+    document.getElementById('focus-prog').style.width = '100%';
+    document.getElementById('focus-counter').textContent = deck.length + ' / ' + deck.length;
+    renderDots();
   }
 
-  function startNextRound() {
-    round++;
-    // Next deck = only the cards still in learningIds
-    const reviewCards = originalSet.cards.filter(c => learningIds.has(c.id));
-    // Reset learning tracking for this round (they have a clean slate each review)
-    learningIds = new Set();
-    gradeMap = {};
-    startRound(reviewCards);
-    document.getElementById('done-screen').style.display = 'none';
+  function restart(doShuffle) {
+    deck = doShuffle ? shuffle(originalSet.cards) : [...originalSet.cards];
+    if (doShuffle) document.getElementById('shuffle-tog').checked = true;
+    idx = 0;
+    seenIndices = new Set();
+    showCard();
   }
 
-  function restartFull() {
-    round = 1;
-    knownIds = new Set();
-    learningIds = new Set();
-    gradeMap = {};
-    const doShuffle = document.getElementById('shuffle-tog').checked;
-    startRound(doShuffle ? shuffle(originalSet.cards) : [...originalSet.cards]);
-    document.getElementById('done-screen').style.display = 'none';
-    toast('Restarted.');
-  }
-
-  // ── UI HELPERS ────────────────────────────────────────────────────────────────
-
-  function updatePileTags() {
-    document.getElementById('pile-known').textContent = '✓ ' + knownIds.size + ' known';
-    const lTag = document.getElementById('pile-learning');
-    if (learningIds.size > 0) {
-      lTag.style.display = '';
-      lTag.textContent = '↺ ' + learningIds.size + ' to review';
-    } else {
-      lTag.style.display = 'none';
-    }
-  }
+  // ── DOTS ──────────────────────────────────────────────────────────────────────
 
   function renderDots() {
     const container = document.getElementById('focus-dots');
-    const total = currentDeck.length;
+    const total = deck.length;
     if (total === 0) { container.innerHTML = ''; return; }
-    const MAX = 40;
-    const compact = total > 18;
+    const MAX = 50;
+    const compact = total > 20;
 
-    const items = total <= MAX
-      ? Array.from({length: total}, (_, i) => i)
-      : (() => {
-          const half = 15;
-          const start = Math.max(0, Math.min(idx - half, total - MAX));
-          return Array.from({length: Math.min(MAX, total)}, (_, i) => start + i);
-        })();
-
-    container.innerHTML = items.map(i => {
-      const card = currentDeck[i];
+    function dotHtml(i) {
       let cls = 'focus-dot';
-      if (i === idx) cls += ' active';
-      else if (gradeMap[card.id] === 'known')    cls += ' known';
-      else if (gradeMap[card.id] === 'learning') cls += ' learning';
+      if (i === idx)              cls += ' active';
+      else if (seenIndices.has(i)) cls += ' seen';
       const sz = compact ? 'width:5px;height:5px' : '';
       return `<div class="${cls}" style="${sz}"></div>`;
-    }).join('');
+    }
+
+    if (total <= MAX) {
+      container.innerHTML = Array.from({length: total}, (_, i) => dotHtml(i)).join('');
+    } else {
+      const HALF = 20;
+      const start = Math.max(0, Math.min(idx - HALF, total - MAX));
+      const end   = Math.min(total - 1, start + MAX - 1);
+      let html = start > 0 ? `<span style="font-size:0.6rem;color:var(--text-muted)">+${start}</span>` : '';
+      for (let i = start; i <= end; i++) html += dotHtml(i);
+      if (end < total - 1) html += `<span style="font-size:0.6rem;color:var(--text-muted)">+${total-end-1}</span>`;
+      container.innerHTML = html;
+    }
   }
+
+  // ── SETTINGS ──────────────────────────────────────────────────────────────────
 
   function handleShuffle() {
     const on = document.getElementById('shuffle-tog').checked;
-    toast(on ? 'Shuffle on — takes effect next round.' : 'Shuffle off.');
+    deck = on ? shuffle(originalSet.cards) : [...originalSet.cards];
+    idx = 0;
+    seenIndices = new Set();
+    showCard();
+    toast(on ? 'Cards shuffled.' : 'Original order restored.');
   }
 
-  // ── SETTINGS DRAWER ───────────────────────────────────────────────────────────
-
-  function openDrawer() {
+  function openDrawer()  {
     document.getElementById('settings-drawer').classList.add('open');
     document.getElementById('drawer-overlay').classList.add('show');
   }
-
   function closeDrawer() {
     document.getElementById('settings-drawer').classList.remove('open');
     document.getElementById('drawer-overlay').classList.remove('show');
   }
 
-  // ── KEYBOARD ──────────────────────────────────────────────────────────────────
-
-  window.addEventListener('keydown', e => {
-    if (e.key === ' ')         { e.preventDefault(); flipCard(); }
-    if (e.key === 'ArrowLeft') { e.preventDefault(); if (isFlipped) gradeCard(false); else prevCard(); }
-    if (e.key === 'ArrowRight'){ e.preventDefault(); if (isFlipped) gradeCard(true); }
-    if (e.key === 'Escape')    closeDrawer();
-  });
-
-  // ── SWIPE ON CARD ─────────────────────────────────────────────────────────────
+  // ── SWIPE ─────────────────────────────────────────────────────────────────────
 
   let touchStartX = null, touchStartY = null;
-  document.getElementById('card-scene').addEventListener('touchstart', e => {
+  document.getElementById('focus-stage').addEventListener('touchstart', e => {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
   }, { passive: true });
 
-  document.getElementById('card-scene').addEventListener('touchend', e => {
+  document.getElementById('focus-stage').addEventListener('touchend', e => {
     if (touchStartX === null) return;
     const dx = e.changedTouches[0].clientX - touchStartX;
     const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-    // Only horizontal swipes and only after flip (grading swipes)
-    if (Math.abs(dx) > dy && Math.abs(dx) > 60 && isFlipped) {
-      gradeCard(dx > 0); // swipe right = correct, left = incorrect
+    // Only count as swipe if clearly horizontal and long enough
+    if (Math.abs(dx) > dy && Math.abs(dx) > 60) {
+      if (dx < 0 && revealed) nextCard();   // swipe left → next (only after reveal)
+      else if (dx > 0)        prevCard();   // swipe right → prev
+      // Prevent the click event from also firing
+      e.preventDefault();
     }
     touchStartX = touchStartY = null;
   });
+
+  // ── KEYBOARD ──────────────────────────────────────────────────────────────────
+
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+    switch (e.key) {
+      case ' ':
+        e.preventDefault();
+        if (!revealed) revealCard(); else nextCard();
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        if (revealed) nextCard();
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        prevCard();
+        break;
+      case 's': case 'S': {
+        const t = document.getElementById('shuffle-tog');
+        t.checked = !t.checked;
+        handleShuffle();
+        break;
+      }
+      case 'Escape':
+        closeDrawer();
+        break;
+    }
+  });
+
+  // ── THEME ─────────────────────────────────────────────────────────────────────
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _origToggle = toggleTheme;
+  window.toggleTheme = function() { _origToggle(); updateThemeLabel(); };
 
   init();
 </script>

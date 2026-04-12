@@ -1,6 +1,6 @@
 {
-  "name": "FlashDeck",
-  "short_name": "FlashDeck",
+  "name": "Flashcards",
+  "short_name": "Flashcards",
   "description": "Your local flashcard study app.",
   "start_url": "./index.html",
   "display": "standalone",

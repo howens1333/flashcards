@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Learn - Flashcards</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2d5a27">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── LAYOUT ── */
+    .learn-wrap {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── HEADER ── */
+    .learn-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+      flex-wrap: wrap;
+    }
+    .learn-title {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── PROGRESS ── */
+    .learn-progress-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+    .learn-progress-bar-wrap {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .learn-progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+    }
+    .learn-progress-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* ── PILE TAGS ── */
+    .pile-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .pile-tag {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.2rem 0.65rem;
+      border-radius: 99px;
+    }
+    .pile-tag.mastered { background: #eafaf1; color: #1a7a45; }
+    [data-theme="dark"] .pile-tag.mastered { background: #0f2e1a; color: #5dd68a; }
+    .pile-tag.remaining { background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+    .pile-tag.wrong { background: var(--danger-light); color: var(--danger); }
+
+    /* ── QUESTION CARD ── */
+    .question-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 2.25rem 2rem 1.75rem;
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+    .q-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+    .q-text {
+      font-family: var(--font-display);
+      font-size: clamp(1.15rem, 3vw, 1.65rem);
+      letter-spacing: -0.01em;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: 1.75rem;
+    }
+
+    /* ── ANSWER INPUT ── */
+    .answer-wrap {
+      position: relative;
+    }
+    .answer-input {
+      width: 100%;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      padding: 0.75rem 1rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.18s, box-shadow 0.18s;
+    }
+    .answer-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(45,90,39,0.12);
+    }
+    .answer-input.correct {
+      border-color: #27ae60;
+      background: #eafaf1;
+      color: #1a7a45;
+    }
+    [data-theme="dark"] .answer-input.correct {
+      background: #0f2e1a;
+      color: #5dd68a;
+      border-color: #27ae60;
+    }
+    .answer-input.incorrect {
+      border-color: var(--danger);
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+    .answer-input:disabled { cursor: default; }
+
+    /* ── FEEDBACK ── */
+    .feedback-row {
+      display: none;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-top: 0.85rem;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+    }
+    .feedback-row.correct-fb {
+      background: #eafaf1;
+      color: #1a7a45;
+      border: 1px solid #a9dfbf;
+      display: flex;
+    }
+    [data-theme="dark"] .feedback-row.correct-fb {
+      background: #0f2e1a;
+      color: #5dd68a;
+      border-color: #1a5c30;
+    }
+    .feedback-row.incorrect-fb {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid rgba(192,57,43,0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .feedback-correct-answer {
+      font-weight: 600;
+    }
+    .feedback-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+    /* ── OVERRIDE BUTTON (shown on incorrect) ── */
+    .override-btn {
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: none;
+      border: 1px solid currentColor;
+      border-radius: 6px;
+      padding: 0.2rem 0.6rem;
+      cursor: pointer;
+      color: inherit;
+      opacity: 0.75;
+      transition: opacity 0.15s;
+      align-self: flex-start;
+      margin-top: 0.1rem;
+    }
+    .override-btn:hover { opacity: 1; }
+
+    /* ── SUBMIT / NEXT BUTTON ── */
+    .action-row {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.25rem;
+    }
+    .submit-btn {
+      flex: 1;
+      height: 48px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: var(--radius-sm);
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      transition: all 0.18s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .submit-btn.check-btn {
+      background: var(--accent);
+      color: #fff;
+    }
+    .submit-btn.check-btn:hover { background: var(--accent-hover); }
+    .submit-btn.check-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    .submit-btn.next-btn {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .submit-btn.next-btn:hover { background: var(--border); }
+
+    /* ── ROUND BADGE ── */
+    .round-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.2rem 0.65rem;
+      white-space: nowrap;
+    }
+
+    /* ── DONE SCREEN ── */
+    .done-screen {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+    }
+    .done-emoji { font-size: 3rem; margin-bottom: 1rem; }
+    .done-screen h2 {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .done-screen p { color: var(--text-muted); margin-bottom: 0.4rem; font-size: 0.9rem; }
+    .done-stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 1.5rem 0;
+    }
+    .done-stat-val {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .done-stat-val.good { color: var(--accent); }
+    .done-stat-val.bad  { color: var(--danger); }
+    .done-stat-label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-top: 0.2rem; }
+    .done-actions { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; margin-top: 1.5rem; }
+
+    /* ── KBD HINTS ── */
+    .kbd-hints {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 1.25rem;
+    }
+    .kbd-hint { font-size: 0.72rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.3rem; }
+
+    @media (max-width: 600px) {
+      .learn-wrap { padding: 1.25rem 1rem 3rem; }
+      .question-card { padding: 1.5rem 1.25rem 1.25rem; }
+      .kbd-hints { display: none; }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand"><span class="dot"></span> Flashcards</a>
+  <div class="nav-links">
+    <a href="index.html" id="back-link">← Back</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="learn-wrap">
+
+  <!-- Header -->
+  <div class="learn-header">
+    <div class="learn-title" id="set-title"></div>
+    <span class="round-badge" id="round-badge">Round 1</span>
+  </div>
+
+  <!-- Progress -->
+  <div class="learn-progress-row">
+    <div class="learn-progress-bar-wrap">
+      <div class="learn-progress-bar-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+    <span class="learn-progress-label" id="progress-label">0 / 0</span>
+  </div>
+
+  <!-- Pile tags -->
+  <div class="pile-row">
+    <span class="pile-tag mastered" id="tag-mastered">✓ 0 mastered</span>
+    <span class="pile-tag remaining" id="tag-remaining">0 remaining</span>
+    <span class="pile-tag wrong" id="tag-wrong" style="display:none">↺ 0 to redo</span>
+  </div>
+
+  <!-- Question card -->
+  <div id="question-card" class="question-card">
+    <div class="q-label" id="q-label">Term</div>
+    <div class="q-text" id="q-text"></div>
+
+    <div class="answer-wrap">
+      <input
+        class="answer-input"
+        id="answer-input"
+        type="text"
+        placeholder="Type your answer…"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        spellcheck="false"
+      >
+    </div>
+
+    <!-- Feedback -->
+    <div class="feedback-row" id="feedback-row">
+      <span class="feedback-icon" id="feedback-icon"></span>
+      <div>
+        <div id="feedback-msg"></div>
+        <div class="feedback-correct-answer" id="feedback-answer"></div>
+      </div>
+    </div>
+    <button class="override-btn" id="override-btn" style="display:none" onclick="overrideCorrect()">
+      ✓ I actually knew this
+    </button>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="action-row" id="action-row">
+    <button class="submit-btn check-btn" id="check-btn" onclick="checkAnswer()" disabled>Check</button>
+  </div>
+
+  <!-- Keyboard hints -->
+  <div class="kbd-hints">
+    <span class="kbd-hint"><kbd>Enter</kbd> Check / Next</span>
+    <span class="kbd-hint"><kbd>Esc</kbd> Restart</span>
+  </div>
+
+  <!-- Done screen (hidden initially) -->
+  <div class="done-screen" id="done-screen" style="display:none">
+    <div class="done-emoji" id="done-emoji">🎉</div>
+    <h2 id="done-heading">Session complete!</h2>
+    <p id="done-msg"></p>
+    <div class="done-stats">
+      <div>
+        <div class="done-stat-val good" id="done-correct">0</div>
+        <div class="done-stat-label">Correct</div>
+      </div>
+      <div>
+        <div class="done-stat-val bad" id="done-wrong">0</div>
+        <div class="done-stat-label">Missed</div>
+      </div>
+    </div>
+    <div class="done-actions" id="done-actions"></div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  const setId = getParam('id');
+  let originalSet = null;
+
+  // Session state
+  let queue = [];          // cards still to answer this round
+  let wrongIds = new Set();  // ids wrong this round
+  let masteredIds = new Set();
+  let round = 1;
+  let currentCard = null;
+  let answered = false;    // has the current card been checked?
+  let roundCorrect = 0;
+  let roundWrong = 0;
+
+  // ── INIT ──────────────────────────────────────────────────────────────────────
+
+  function init() {
+    if (!setId) { window.location.href = 'index.html'; return; }
+    originalSet = getSet(setId);
+    if (!originalSet || !originalSet.cards.length) { window.location.href = 'index.html'; return; }
+
+    document.title = originalSet.title + ' — Learn · Flashcards';
+    document.getElementById('set-title').textContent = originalSet.title;
+    document.getElementById('back-link').href = 'study.html?id=' + setId;
+    updateThemeLabel();
+    startRound([...originalSet.cards]);
+  }
+
+  function startRound(cards) {
+    queue = shuffle(cards);
+    wrongIds = new Set();
+    roundCorrect = 0;
+    roundWrong = 0;
+    answered = false;
+    document.getElementById('round-badge').textContent = 'Round ' + round;
+    document.getElementById('done-screen').style.display = 'none';
+    document.getElementById('question-card').style.display = '';
+    document.getElementById('action-row').style.display = '';
+    nextCard();
+  }
+
+  // ── CARD DISPLAY ──────────────────────────────────────────────────────────────
+
+  function nextCard() {
+    if (queue.length === 0) { endRound(); return; }
+    currentCard = queue.shift();
+    answered = false;
+
+    document.getElementById('q-label').textContent = 'Definition';
+    document.getElementById('q-text').textContent = currentCard.definition;
+
+    const input = document.getElementById('answer-input');
+    input.value = '';
+    input.className = 'answer-input';
+    input.disabled = false;
+    input.placeholder = 'Type the term…';
+
+    document.getElementById('feedback-row').style.display = 'none';
+    document.getElementById('feedback-row').className = 'feedback-row';
+    document.getElementById('override-btn').style.display = 'none';
+
+    // Reset action row to just Check
+    const row = document.getElementById('action-row');
+    row.innerHTML = `<button class="submit-btn check-btn" id="check-btn" onclick="checkAnswer()" disabled>Check</button>`;
+
+    updateProgress();
+    input.focus();
+  }
+
+  // ── CHECKING ──────────────────────────────────────────────────────────────────
+
+  function checkAnswer() {
+    if (answered) { nextCard(); return; }
+    const input = document.getElementById('answer-input');
+    const userAns = input.value.trim();
+    if (!userAns) return;
+
+    answered = true;
+    input.disabled = true;
+
+    const correct = userAns.toLowerCase() === currentCard.term.toLowerCase();
+
+    if (correct) {
+      markCorrect();
+    } else {
+      markIncorrect();
+    }
+  }
+
+  function markCorrect(silent) {
+    masteredIds.add(currentCard.id);
+    wrongIds.delete(currentCard.id);
+    roundCorrect++;
+
+    const input = document.getElementById('answer-input');
+    input.className = 'answer-input correct';
+
+    const fb = document.getElementById('feedback-row');
+    fb.className = 'feedback-row correct-fb';
+    document.getElementById('feedback-icon').textContent = '✓';
+    document.getElementById('feedback-msg').textContent = 'Correct!';
+    document.getElementById('feedback-answer').textContent = '';
+    document.getElementById('override-btn').style.display = 'none';
+
+    swapToNext();
+    updateProgress();
+  }
+
+  function markIncorrect() {
+    wrongIds.add(currentCard.id);
+    masteredIds.delete(currentCard.id);
+    roundWrong++;
+
+    const input = document.getElementById('answer-input');
+    input.className = 'answer-input incorrect';
+
+    const fb = document.getElementById('feedback-row');
+    fb.className = 'feedback-row incorrect-fb';
+    document.getElementById('feedback-icon').textContent = '✗';
+    document.getElementById('feedback-msg').textContent = 'The correct answer was:';
+    document.getElementById('feedback-answer').textContent = currentCard.term;
+    document.getElementById('override-btn').style.display = '';
+
+    swapToNext();
+    updateProgress();
+  }
+
+  function overrideCorrect() {
+    // Re-mark current card as correct (user pressed "I actually knew this")
+    wrongIds.delete(currentCard.id);
+    masteredIds.add(currentCard.id);
+    roundCorrect++;
+    roundWrong = Math.max(0, roundWrong - 1);
+
+    const input = document.getElementById('answer-input');
+    input.className = 'answer-input correct';
+
+    const fb = document.getElementById('feedback-row');
+    fb.className = 'feedback-row correct-fb';
+    document.getElementById('feedback-icon').textContent = '✓';
+    document.getElementById('feedback-msg').textContent = 'Marked as correct.';
+    document.getElementById('feedback-answer').textContent = '';
+    document.getElementById('override-btn').style.display = 'none';
+
+    updateProgress();
+  }
+
+  function swapToNext() {
+    const row = document.getElementById('action-row');
+    row.innerHTML = `<button class="submit-btn next-btn" id="next-btn" onclick="nextCard()">
+      Next →
+    </button>`;
+    document.getElementById('next-btn').focus();
+  }
+
+  // ── PROGRESS ──────────────────────────────────────────────────────────────────
+
+  function updateProgress() {
+    const total = originalSet.cards.length;
+    const done = masteredIds.size;
+    const pct = total ? (done / total * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent = done + ' / ' + total;
+
+    document.getElementById('tag-mastered').textContent = '✓ ' + masteredIds.size + ' mastered';
+    document.getElementById('tag-remaining').textContent = (queue.length + (answered ? 0 : 1)) + ' remaining';
+
+    const wrongTag = document.getElementById('tag-wrong');
+    if (wrongIds.size > 0) {
+      wrongTag.style.display = '';
+      wrongTag.textContent = '↺ ' + wrongIds.size + ' to redo';
+    } else {
+      wrongTag.style.display = 'none';
+    }
+  }
+
+  // ── END OF ROUND ──────────────────────────────────────────────────────────────
+
+  function endRound() {
+    document.getElementById('question-card').style.display = 'none';
+    document.getElementById('action-row').style.display = 'none';
+
+    const screen = document.getElementById('done-screen');
+    screen.style.display = '';
+
+    document.getElementById('done-correct').textContent = roundCorrect;
+    document.getElementById('done-wrong').textContent = roundWrong;
+
+    const wrongCards = originalSet.cards.filter(c => wrongIds.has(c.id));
+
+    if (wrongCards.length === 0) {
+      // Perfect — all mastered
+      document.getElementById('done-emoji').textContent = '🎉';
+      document.getElementById('done-heading').textContent = round === 1 ? 'Perfect round!' : 'All done!';
+      document.getElementById('done-msg').textContent =
+        'You got all ' + originalSet.cards.length + ' cards correct.';
+      document.getElementById('done-actions').innerHTML = `
+        <button class="btn btn-secondary" onclick="restartFull()">↺ Start over</button>
+        <a class="btn btn-primary" href="test.html?id=${setId}">Take a Test →</a>`;
+    } else {
+      // Still some wrong — offer review round
+      document.getElementById('done-emoji').textContent = '📚';
+      document.getElementById('done-heading').textContent = 'Round ' + round + ' done';
+      document.getElementById('done-msg').textContent =
+        roundCorrect + ' correct · ' + wrongIds.size + ' to review';
+      document.getElementById('done-actions').innerHTML = `
+        <button class="btn btn-primary" onclick="startReview()">
+          ↺ Review ${wrongIds.size} card${wrongIds.size !== 1 ? 's' : ''}
+        </button>
+        <button class="btn btn-secondary" onclick="restartFull()">Start over</button>`;
+    }
+  }
+
+  function startReview() {
+    round++;
+    const wrongCards = originalSet.cards.filter(c => wrongIds.has(c.id));
+    // Reset mastered only for the wrong ones going into review
+    wrongIds.forEach(id => masteredIds.delete(id));
+    startRound(wrongCards);
+  }
+
+  function restartFull() {
+    round = 1;
+    masteredIds = new Set();
+    wrongIds = new Set();
+    startRound([...originalSet.cards]);
+  }
+
+  // ── THEME ─────────────────────────────────────────────────────────────────────
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _origToggle = toggleTheme;
+  window.toggleTheme = function() { _origToggle(); updateThemeLabel(); };
+
+  // ── KEYBOARD ──────────────────────────────────────────────────────────────────
+
+  document.addEventListener('keydown', e => {
+    const input = document.getElementById('answer-input');
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (!answered) {
+        if (input && input.value.trim()) checkAnswer();
+      } else {
+        nextCard();
+      }
+    }
+    if (e.key === 'Escape') restartFull();
+  });
+
+  // Enable/disable Check button based on input content
+  document.addEventListener('input', e => {
+    if (e.target.id === 'answer-input') {
+      const btn = document.getElementById('check-btn');
+      if (btn) btn.disabled = !e.target.value.trim();
+    }
+  });
+
+  init();
+</script>
+</body>
+</html>
