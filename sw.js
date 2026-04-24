@@ -14,6 +14,7 @@ const HTML_PAGES = [
   './index.html',
   './study.html',
   './learn.html',
+  './match.html',
   './edit.html',
   './test.html',
   './stats.html',

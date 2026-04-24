@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Match - Flashcards</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2d5a27">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── LAYOUT ── */
+    .match-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 5rem;
+    }
+
+    /* ── HEADER ── */
+    .match-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .match-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      letter-spacing: -0.02em;
+      flex: 1;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .match-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.2rem 0.65rem;
+      white-space: nowrap;
+    }
+
+    /* ── TIMER + PROGRESS ── */
+    .match-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .match-timer {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      min-width: 4rem;
+    }
+    .match-progress-wrap {
+      flex: 1;
+      min-width: 120px;
+    }
+    .match-progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+      margin-bottom: 0.3rem;
+    }
+    .match-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .match-progress-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* ── GRID ── */
+    .match-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ── TILES ── */
+    .match-tile {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      word-break: break-word;
+      position: relative;
+    }
+    .match-tile:hover:not(.matched):not(.wrong) {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      box-shadow: var(--shadow-sm);
+    }
+    .match-tile.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(45,90,39,0.15);
+      transform: scale(1.02);
+    }
+    .match-tile.wrong {
+      border-color: var(--danger);
+      background: var(--danger-light);
+      animation: shake 0.35s ease;
+    }
+    .match-tile.matched {
+      border-color: transparent;
+      background: var(--surface-2);
+      opacity: 0.38;
+      cursor: default;
+      pointer-events: none;
+      transform: none;
+    }
+    .match-tile.match-flash {
+      border-color: #27ae60;
+      background: #eafaf1;
+    }
+    [data-theme="dark"] .match-tile.match-flash {
+      background: #0f2e1a;
+      border-color: #27ae60;
+    }
+
+    /* ── COLUMN LABELS ── */
+    .match-col-labels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.65rem;
+      margin-bottom: 0.4rem;
+    }
+    .match-col-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding-left: 0.2rem;
+    }
+
+    /* ── BATCH RESULT SCREEN ── */
+    .batch-screen {
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      margin-top: 1rem;
+    }
+    .batch-screen.show { display: block; }
+    .batch-emoji { font-size: 2.75rem; margin-bottom: 0.75rem; }
+    .batch-screen h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .batch-screen p { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.5rem; }
+    .batch-actions { display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ── FINAL RESULTS ── */
+    .results-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-md);
+      display: none;
+    }
+    .results-card.show { display: block; }
+    .score-ring { width: 110px; height: 110px; margin: 0 auto 1rem; display: block; }
+    .score-ring circle { fill: none; stroke-width: 8; }
+    .score-ring .track { stroke: var(--border); }
+    .score-ring .fill { stroke: var(--accent); transition: stroke-dashoffset 0.8s ease; }
+    .score-pct {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+    }
+    .results-card h2 {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.4rem;
+    }
+    .results-card p { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.35rem; }
+    .results-stats {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin: 1.25rem 0 1.75rem;
+    }
+    .results-stat-val {
+      font-family: var(--font-display);
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .results-stat-val.good { color: var(--accent); }
+    .results-stat-val.bad  { color: var(--danger); }
+    .results-stat-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+    .results-actions { display: flex; gap: 0.65rem; justify-content: center; flex-wrap: wrap; }
+
+    /* ── SHAKE ANIMATION ── */
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+
+    @media (max-width: 560px) {
+      .match-grid { grid-template-columns: 1fr 1fr; gap: 0.45rem; }
+      .match-tile { padding: 0.7rem 0.75rem; font-size: 0.82rem; min-height: 54px; }
+      .match-timer { font-size: 1.2rem; }
+    }
+    @media (max-width: 380px) {
+      .match-grid { grid-template-columns: 1fr; }
+      .match-col-labels { display: none; }
+    }
+  </style>
+</head>
+<body>
+<nav>
+  <a href="index.html" class="nav-brand">🎓 Flashcards</a>
+  <a href="index.html" class="mobile-back-btn" id="mobile-back">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Sets
+  </a>
+  <div class="nav-links">
+    <a href="index.html">← All Sets</a>
+    <a id="study-link" href="#">Study</a>
+    <a id="learn-link" href="#">Learn</a>
+    <a id="focus-link" href="#">Focus</a>
+    <a id="edit-link" href="#">Edit</a>
+    <a id="test-link" href="#">Test</a>
+    <a class="active-nav" id="match-link" href="#">Match</a>
+    <a id="stats-link" href="#">Stats</a>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+      <span class="theme-toggle-track"></span>
+      <span id="theme-label">Dark</span>
+    </button>
+  </div>
+</nav>
+
+<div class="match-wrap">
+
+  <!-- Header -->
+  <div class="match-header">
+    <div class="match-title" id="match-title">Loading…</div>
+    <span class="match-badge" id="batch-badge">Batch 1</span>
+  </div>
+
+  <!-- Timer + progress -->
+  <div class="match-meta" id="match-meta">
+    <div class="match-timer" id="match-timer">0:00</div>
+    <div class="match-progress-wrap">
+      <div class="match-progress-bar">
+        <div class="match-progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="match-progress-label" id="progress-label">0 of 0 matched</div>
+    </div>
+  </div>
+
+  <!-- Column labels -->
+  <div class="match-col-labels">
+    <span class="match-col-label">Terms</span>
+    <span class="match-col-label">Definitions</span>
+  </div>
+
+  <!-- Matching grid -->
+  <div class="match-grid" id="match-grid"></div>
+
+  <!-- Batch complete screen -->
+  <div class="batch-screen" id="batch-screen">
+    <div class="batch-emoji" id="batch-emoji">✅</div>
+    <h2 id="batch-heading">Batch complete!</h2>
+    <p id="batch-sub"></p>
+    <div class="batch-actions">
+      <a class="btn btn-secondary" id="batch-home-btn" href="#">← Home</a>
+      <button class="btn btn-primary" id="batch-next-btn" onclick="nextBatch()">Next Batch →</button>
+    </div>
+  </div>
+
+  <!-- Final results screen -->
+  <div class="results-card" id="results-screen">
+    <svg class="score-ring" viewBox="0 0 100 100">
+      <circle class="track" cx="50" cy="50" r="42"/>
+      <circle class="fill" id="score-ring-fill" cx="50" cy="50" r="42"
+        stroke-dasharray="264"
+        stroke-dashoffset="264"
+        transform="rotate(-90 50 50)"/>
+    </svg>
+    <div class="score-pct" id="score-pct">0%</div>
+    <h2 id="results-heading">Complete!</h2>
+    <p id="results-sub"></p>
+    <div class="results-stats">
+      <div>
+        <div class="results-stat-val good" id="results-time">0:00</div>
+        <div class="results-stat-label">Time</div>
+      </div>
+      <div>
+        <div class="results-stat-val good" id="results-correct">0</div>
+        <div class="results-stat-label">Correct</div>
+      </div>
+      <div>
+        <div class="results-stat-val bad" id="results-wrong">0</div>
+        <div class="results-stat-label">Mistakes</div>
+      </div>
+    </div>
+    <div class="results-actions">
+      <button class="btn btn-secondary" onclick="restartAll()">↺ Play Again</button>
+      <a class="btn btn-secondary" id="results-test-link" href="#">Take a Test</a>
+      <a class="btn btn-primary" id="results-study-link" href="#">Study Mode</a>
+    </div>
+  </div>
+
+</div>
+
+<script src="app.js"></script>
+<script>
+  const BATCH_SIZE = 6;
+  const setId = getParam('id');
+  let currentSet = null;
+
+  // Game state
+  let allCards = [];
+  let batches = [];
+  let batchIdx = 0;
+  let batchCards = [];
+
+  let selectedTerm = null;   // { id, el }
+  let selectedDef  = null;   // { id, el }
+  let matchedIds   = new Set();
+
+  // Scoring
+  let totalCorrect = 0;
+  let totalWrong   = 0;
+  let totalMatched = 0;  // across all batches
+
+  // Timer
+  let timerInterval = null;
+  let elapsedSeconds = 0;
+  let timerRunning = false;
+
+  // ── INIT ──────────────────────────────────────────────────────────────────────
+
+  function init() {
+    if (!setId) { window.location.href = 'index.html'; return; }
+    currentSet = getSet(setId);
+    if (!currentSet || currentSet.cards.length < 2) {
+      window.location.href = 'index.html'; return;
+    }
+
+    document.title = currentSet.title + ' — Match · Flashcards';
+    document.getElementById('match-title').textContent = currentSet.title;
+    document.getElementById('mobile-back').href = 'study.html?id=' + setId;
+    document.getElementById('study-link').href  = 'study.html?id='  + setId;
+    document.getElementById('learn-link').href  = 'learn.html?id='  + setId;
+    document.getElementById('focus-link').href  = 'flashcard.html?id=' + setId;
+    document.getElementById('edit-link').href   = 'edit.html?id='   + setId;
+    document.getElementById('test-link').href   = 'test.html?id='   + setId;
+    document.getElementById('stats-link').href  = 'stats.html?id='  + setId;
+    document.getElementById('batch-home-btn').href       = 'study.html?id=' + setId;
+    document.getElementById('results-study-link').href   = 'study.html?id=' + setId;
+    document.getElementById('results-test-link').href    = 'test.html?id='  + setId;
+
+    updateThemeLabel();
+
+    allCards = shuffle([...currentSet.cards]);
+    // Split into batches of BATCH_SIZE
+    batches = [];
+    for (let i = 0; i < allCards.length; i += BATCH_SIZE) {
+      batches.push(allCards.slice(i, i + BATCH_SIZE));
+    }
+
+    startBatch(0);
+    startTimer();
+  }
+
+  // ── BATCHES ───────────────────────────────────────────────────────────────────
+
+  function startBatch(idx) {
+    batchIdx = idx;
+    batchCards = batches[idx];
+    matchedIds = new Set();
+    selectedTerm = null;
+    selectedDef  = null;
+
+    document.getElementById('batch-screen').classList.remove('show');
+    document.getElementById('results-screen').classList.remove('show');
+    document.getElementById('match-grid').style.display = '';
+    document.getElementById('match-meta').style.display = '';
+
+    const batchNum = idx + 1;
+    const totalBatches = batches.length;
+    document.getElementById('batch-badge').textContent =
+      totalBatches > 1 ? `Batch ${batchNum} of ${totalBatches}` : `${batchCards.length} pairs`;
+
+    updateProgress();
+    renderGrid();
+  }
+
+  function nextBatch() {
+    if (batchIdx + 1 < batches.length) {
+      startBatch(batchIdx + 1);
+    }
+  }
+
+  // ── GRID ──────────────────────────────────────────────────────────────────────
+
+  function renderGrid() {
+    const grid = document.getElementById('match-grid');
+    const terms = shuffle(batchCards.map(c => ({ id: c.id, text: c.term,       side: 'term' })));
+    const defs  = shuffle(batchCards.map(c => ({ id: c.id, text: c.definition, side: 'def'  })));
+
+    // Interleave: col 1 = terms, col 2 = defs, same row index
+    // Grid is 2-col so we just push all terms first then all defs;
+    // CSS grid fills column by column — so we need to alternate.
+    // We'll build rows manually: term[0], def[0], term[1], def[1]...
+    grid.innerHTML = '';
+    const n = batchCards.length;
+    for (let i = 0; i < n; i++) {
+      grid.appendChild(makeTile(terms[i]));
+      grid.appendChild(makeTile(defs[i]));
+    }
+  }
+
+  function makeTile(item) {
+    const el = document.createElement('div');
+    el.className = 'match-tile';
+    el.dataset.id   = item.id;
+    el.dataset.side = item.side;
+    el.textContent  = item.text;
+    el.addEventListener('click', () => handleTileClick(item, el));
+    return el;
+  }
+
+  // ── CLICK LOGIC ───────────────────────────────────────────────────────────────
+
+  function handleTileClick(item, el) {
+    if (matchedIds.has(item.id + '-' + item.side)) return;
+    if (matchedIds.has(item.id) && item.side === 'term') return;
+
+    // Deselect if clicking the already-selected tile
+    if (item.side === 'term' && selectedTerm && selectedTerm.id === item.id && selectedTerm.side === 'term') {
+      selectedTerm.el.classList.remove('selected');
+      selectedTerm = null;
+      return;
+    }
+    if (item.side === 'def' && selectedDef && selectedDef.id === item.id && selectedDef.side === 'def') {
+      selectedDef.el.classList.remove('selected');
+      selectedDef = null;
+      return;
+    }
+
+    // Select the tile
+    if (item.side === 'term') {
+      if (selectedTerm) selectedTerm.el.classList.remove('selected');
+      selectedTerm = { ...item, el };
+      el.classList.add('selected');
+    } else {
+      if (selectedDef) selectedDef.el.classList.remove('selected');
+      selectedDef = { ...item, el };
+      el.classList.add('selected');
+    }
+
+    // If both selected, check match
+    if (selectedTerm && selectedDef) {
+      checkMatch();
+    }
+  }
+
+  function checkMatch() {
+    const termEl = selectedTerm.el;
+    const defEl  = selectedDef.el;
+    const isMatch = selectedTerm.id === selectedDef.id;
+
+    if (isMatch) {
+      totalCorrect++;
+      totalMatched++;
+
+      // Flash green briefly then fade to matched
+      termEl.classList.add('match-flash');
+      defEl.classList.add('match-flash');
+
+      setTimeout(() => {
+        termEl.classList.remove('match-flash', 'selected');
+        defEl.classList.remove('match-flash', 'selected');
+        termEl.classList.add('matched');
+        defEl.classList.add('matched');
+      }, 420);
+
+      matchedIds.add(selectedTerm.id);
+      selectedTerm = null;
+      selectedDef  = null;
+
+      updateProgress();
+
+      // Check if batch is complete
+      if (matchedIds.size === batchCards.length) {
+        setTimeout(() => showBatchComplete(), 550);
+      }
+    } else {
+      totalWrong++;
+
+      termEl.classList.add('wrong');
+      defEl.classList.add('wrong');
+
+      setTimeout(() => {
+        termEl.classList.remove('wrong', 'selected');
+        defEl.classList.remove('wrong', 'selected');
+        selectedTerm = null;
+        selectedDef  = null;
+      }, 500);
+    }
+  }
+
+  // ── BATCH COMPLETE ─────────────────────────────────────────────────────────────
+
+  function showBatchComplete() {
+    const isLast = batchIdx === batches.length - 1;
+
+    if (isLast) {
+      showFinalResults();
+      return;
+    }
+
+    document.getElementById('match-grid').style.display = 'none';
+    document.getElementById('match-meta').style.display = 'none';
+
+    const batchScreen = document.getElementById('batch-screen');
+    batchScreen.classList.add('show');
+
+    const batchCorrect = batchCards.length;
+    document.getElementById('batch-emoji').textContent = '✅';
+    document.getElementById('batch-heading').textContent = `Batch ${batchIdx + 1} done!`;
+    document.getElementById('batch-sub').textContent =
+      `${batchCorrect} pairs matched. ${batches.length - batchIdx - 1} batch${batches.length - batchIdx - 1 !== 1 ? 'es' : ''} remaining.`;
+  }
+
+  // ── FINAL RESULTS ──────────────────────────────────────────────────────────────
+
+  function showFinalResults() {
+    stopTimer();
+
+    document.getElementById('match-grid').style.display = 'none';
+    document.getElementById('match-meta').style.display = 'none';
+    document.getElementById('batch-screen').classList.remove('show');
+
+    const total = allCards.length;
+    const attempts = totalCorrect + totalWrong;
+    const pct = attempts > 0 ? Math.round((totalCorrect / attempts) * 100) : 100;
+
+    const resultsScreen = document.getElementById('results-screen');
+    resultsScreen.classList.add('show');
+
+    document.getElementById('score-pct').textContent = pct + '%';
+    document.getElementById('results-time').textContent = formatTime(elapsedSeconds);
+    document.getElementById('results-correct').textContent = totalCorrect;
+    document.getElementById('results-wrong').textContent = totalWrong;
+
+    const heading = pct === 100 ? 'Perfect Match! 🎉'
+      : pct >= 80 ? 'Great Job! 👏'
+      : pct >= 60 ? 'Good Effort'
+      : 'Keep Practicing';
+    document.getElementById('results-heading').textContent = heading;
+    document.getElementById('results-sub').textContent =
+      `${totalCorrect} correct out of ${attempts} attempt${attempts !== 1 ? 's' : ''} · ${formatTime(elapsedSeconds)}`;
+
+    // Animate ring
+    const circumference = 264;
+    const offset = circumference - (pct / 100) * circumference;
+    setTimeout(() => {
+      const fill = document.getElementById('score-ring-fill');
+      fill.style.strokeDashoffset = offset;
+      fill.style.stroke = pct >= 80 ? 'var(--accent)' : pct >= 60 ? '#e67e22' : 'var(--danger)';
+    }, 100);
+  }
+
+  function restartAll() {
+    stopTimer();
+    elapsedSeconds = 0;
+    totalCorrect = 0;
+    totalWrong   = 0;
+    totalMatched = 0;
+    allCards = shuffle([...currentSet.cards]);
+    batches = [];
+    for (let i = 0; i < allCards.length; i += BATCH_SIZE) {
+      batches.push(allCards.slice(i, i + BATCH_SIZE));
+    }
+    document.getElementById('results-screen').classList.remove('show');
+    startBatch(0);
+    startTimer();
+  }
+
+  // ── PROGRESS ──────────────────────────────────────────────────────────────────
+
+  function updateProgress() {
+    const total = allCards.length;
+    const done  = totalMatched;
+    const pct   = total ? (done / total * 100) : 0;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-label').textContent =
+      `${done} of ${total} matched`;
+  }
+
+  // ── TIMER ─────────────────────────────────────────────────────────────────────
+
+  function startTimer() {
+    timerRunning = true;
+    timerInterval = setInterval(() => {
+      elapsedSeconds++;
+      document.getElementById('match-timer').textContent = formatTime(elapsedSeconds);
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+    timerRunning = false;
+  }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return m + ':' + String(sec).padStart(2, '0');
+  }
+
+  // ── THEME ─────────────────────────────────────────────────────────────────────
+
+  function updateThemeLabel() {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const el = document.getElementById('theme-label');
+    if (el) el.textContent = isDark ? 'Light' : 'Dark';
+  }
+  const _origToggle = toggleTheme;
+  window.toggleTheme = function() { _origToggle(); updateThemeLabel(); };
+
+  init();
+</script>
+</body>
+</html>

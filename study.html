@@ -416,6 +416,7 @@
     <a id="focus-link" href="#">Focus</a>
     <a id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
+    <a id="match-link" href="#">Match</a>
     <a id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
@@ -447,6 +448,10 @@
     <a class="btn btn-secondary" id="strip-test" href="#">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
       Test
+    </a>
+    <a class="btn btn-secondary" id="strip-match" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Match
     </a>
     <a class="btn btn-secondary" id="strip-stats" href="#">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -574,11 +579,13 @@
     const sf = document.getElementById('strip-focus');
     const sl = document.getElementById('strip-learn');
     const st = document.getElementById('strip-test');
+    const sm = document.getElementById('strip-match');
     const ss = document.getElementById('strip-stats');
     const se = document.getElementById('strip-edit');
     if (sf) sf.href = `flashcard.html?id=${setId}`;
     if (sl) sl.href = `learn.html?id=${setId}`;
     if (st) st.href = `test.html?id=${setId}`;
+    if (sm) sm.href = `match.html?id=${setId}`;
     if (ss) ss.href = `stats.html?id=${setId}`;
     if (se) se.href = `edit.html?id=${setId}`;
     document.getElementById('done-count').textContent = originalSet.cards.length;

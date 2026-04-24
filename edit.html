@@ -216,13 +216,13 @@
     <a id="focus-link" href="#">Focus</a>
     <a class="active-nav" id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
+    <a id="match-link" href="#">Match</a>
     <a id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
     </button>
   </div>
-</nav>
 </nav>
 
 <div class="container">
@@ -336,6 +336,8 @@
     if (studyEl) studyEl.href = `study.html?id=${setId}`;
     const testEl = document.getElementById('test-link');
     if (testEl) testEl.href = `test.html?id=${setId}`;
+    const matchEl = document.getElementById('match-link');
+    if (matchEl) matchEl.href = `match.html?id=${setId}`;
     const statsEl = document.getElementById('stats-link');
     if (statsEl) statsEl.href = `stats.html?id=${setId}`;
     document.getElementById('edit-title').value = currentSet.title;
@@ -517,12 +519,14 @@
     document.title = `Edit: ${currentSet.title} – Flashcards`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
-    const learnEl2 = document.getElementById('learn-link');
-    if (learnEl2) learnEl2.href = `learn.html?id=${setId}`;
+    const learnEl = document.getElementById('learn-link');
+    if (learnEl) learnEl.href = `learn.html?id=${setId}`;
     const studyEl = document.getElementById('study-link');
     if (studyEl) studyEl.href = `study.html?id=${setId}`;
     const testEl = document.getElementById('test-link');
     if (testEl) testEl.href = `test.html?id=${setId}`;
+    const matchEl = document.getElementById('match-link');
+    if (matchEl) matchEl.href = `match.html?id=${setId}`;
     const statsEl = document.getElementById('stats-link');
     if (statsEl) statsEl.href = `stats.html?id=${setId}`;
     toast('Saved!');
