@@ -68,7 +68,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       display: grid;
-      grid-template-columns: 2rem 1fr 1fr auto;
+      grid-template-columns: 1.25rem 2rem 1fr 1fr auto;
       align-items: start;
       gap: 0.75rem;
       padding: 0.9rem 1rem;
@@ -131,7 +131,7 @@
     /* Column labels */
     .col-labels {
       display: grid;
-      grid-template-columns: 2rem 1fr 1fr auto;
+      grid-template-columns: 1.25rem 2rem 1fr 1fr auto;
       gap: 0.75rem;
       padding: 0 1rem;
       margin-bottom: 0.35rem;
@@ -194,10 +194,50 @@
 
     @media (max-width: 640px) {
       .card-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1.25rem 1fr;
       }
       .card-num { display: none; }
       .col-labels { display: none; }
+    }
+
+    /* ── DRAG TO REORDER ── */
+    .card-row {
+      cursor: default;
+      position: relative;
+    }
+    .drag-handle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      opacity: 0.35;
+      cursor: grab;
+      transition: opacity 0.15s;
+      touch-action: none;
+    }
+    .drag-handle:hover { opacity: 0.7; }
+    .drag-handle:active { cursor: grabbing; }
+    .card-row.dragging {
+      opacity: 0.45;
+      background: var(--surface-2);
+    }
+    .card-row.drag-over {
+      border-color: transparent;
+    }
+    .card-row.drag-over::after {
+      content: '';
+      display: block;
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -6px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 99px;
+      z-index: 10;
+      pointer-events: none;
     }
   </style>
 </head>
@@ -250,7 +290,7 @@
   <div class="cards-header">
     <h2 id="card-count-label">Cards</h2>
     <button class="btn btn-ghost btn-icon" title="Import cards from tab-delimited text" onclick="openTextImport()">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     </button>
   </div>
 
@@ -363,7 +403,10 @@
       return;
     }
     list.innerHTML = currentSet.cards.map((c, i) => `
-      <div class="card-row" id="row-${c.id}">
+      <div class="card-row" id="row-${c.id}" draggable="true" data-card-id="${c.id}">
+        <span class="drag-handle" title="Drag to reorder">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
+        </span>
         <span class="card-num">${i + 1}</span>
         <textarea
           placeholder="Term"
@@ -391,7 +434,61 @@
       autoResize(ta);
     });
 
+    // Attach drag-to-reorder listeners
+    list.querySelectorAll('.card-row').forEach(row => {
+      row.addEventListener('dragstart', onDragStart);
+      row.addEventListener('dragover',  onDragOver);
+      row.addEventListener('dragleave', onDragLeave);
+      row.addEventListener('drop',      onDrop);
+      row.addEventListener('dragend',   onDragEnd);
+    });
+
     updateCount();
+  }
+
+  // ── DRAG TO REORDER ───────────────────────────────────────────────────────────
+  let dragSrcId = null;
+
+  function onDragStart(e) {
+    dragSrcId = this.dataset.cardId;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  }
+
+  function onDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    // Only highlight if hovering over a different row
+    const targetId = this.dataset.cardId;
+    if (targetId !== dragSrcId) this.classList.add('drag-over');
+  }
+
+  function onDragLeave() {
+    this.classList.remove('drag-over');
+  }
+
+  function onDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    const targetId = this.dataset.cardId;
+    if (!dragSrcId || targetId === dragSrcId) return;
+
+    const srcIdx  = currentSet.cards.findIndex(c => c.id === dragSrcId);
+    const tgtIdx  = currentSet.cards.findIndex(c => c.id === targetId);
+    if (srcIdx === -1 || tgtIdx === -1) return;
+
+    // Reorder in data
+    const [moved] = currentSet.cards.splice(srcIdx, 1);
+    currentSet.cards.splice(tgtIdx, 0, moved);
+    saveSet(currentSet);
+    renderCards();
+  }
+
+  function onDragEnd() {
+    document.querySelectorAll('.card-row').forEach(r => {
+      r.classList.remove('dragging', 'drag-over');
+    });
+    dragSrcId = null;
   }
 
   function handleTextareaKeydown(e) {

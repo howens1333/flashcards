@@ -414,7 +414,6 @@
     <a class="active-nav" id="study-link" href="#">Study</a>
     <a id="learn-link" href="#">Learn</a>
     <a id="focus-link" href="#">Focus</a>
-    <a id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
     <a id="match-link" href="#">Match</a>
     <a id="stats-link" href="#">Stats</a>
@@ -433,6 +432,10 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       Share
     </button>
+    <a class="btn btn-secondary" id="edit-btn" href="#" style="font-size:0.8rem;padding:0.4rem 0.85rem">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit
+    </a>
   </div>
 
   <!-- Mobile action strip (shows on small screens only) -->
@@ -457,10 +460,7 @@
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Stats
     </a>
-    <a class="btn btn-secondary" id="strip-edit" href="#">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Edit
-    </a>
+
   </div>
 
   <!-- Settings -->
@@ -572,7 +572,7 @@
       `${originalSet.cards.length} card${originalSet.cards.length !== 1 ? 's' : ''}`;
     document.getElementById('focus-link').href = `flashcard.html?id=${setId}`;
     document.getElementById('learn-link').href = `learn.html?id=${setId}`;
-    document.getElementById('edit-link').href = `edit.html?id=${setId}`;
+    document.getElementById('edit-btn').href = `edit.html?id=${setId}`;
     document.getElementById('test-link').href = `test.html?id=${setId}`;
     document.getElementById('stats-link').href = `stats.html?id=${setId}`;
     // Mobile action strip
@@ -581,13 +581,11 @@
     const st = document.getElementById('strip-test');
     const sm = document.getElementById('strip-match');
     const ss = document.getElementById('strip-stats');
-    const se = document.getElementById('strip-edit');
     if (sf) sf.href = `flashcard.html?id=${setId}`;
     if (sl) sl.href = `learn.html?id=${setId}`;
     if (st) st.href = `test.html?id=${setId}`;
     if (sm) sm.href = `match.html?id=${setId}`;
     if (ss) ss.href = `stats.html?id=${setId}`;
-    if (se) se.href = `edit.html?id=${setId}`;
     document.getElementById('done-count').textContent = originalSet.cards.length;
 
     deck = [...originalSet.cards];
