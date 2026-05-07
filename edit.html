@@ -174,11 +174,26 @@
     .save-bar.hidden { opacity: 0; pointer-events: none; }
 
     @media (max-width: 640px) {
+      .kbd-shortcuts { display: none !important; }
       .card-row {
         grid-template-columns: 1.25rem 1fr;
+        grid-template-rows: auto auto;
       }
+      /* Handle stays in col 1, spans both rows */
+      .card-row .drag-handle {
+        grid-row: 1 / 3;
+        align-self: start;
+        padding-top: 0.6rem;
+      }
+      /* Both textareas fill col 2, stacked */
+      .card-row textarea {
+        grid-column: 2;
+      }
+      /* Hover actions float top-right as usual */
       .card-num { display: none; }
       .col-labels { display: none; }
+      /* Swap-all button label on mobile */
+      .swap-all-btn span { display: none; }
     }
 
     /* ── DRAG TO REORDER ── */
@@ -340,7 +355,7 @@
     Add Card
   </button>
 
-  <div style="display:flex;gap:1.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap">
+  <div class="kbd-shortcuts" style="display:flex;gap:1.5rem;justify-content:center;margin-top:1rem;flex-wrap:wrap">
     <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Enter</kbd> Next field / new card</span>
     <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Tab</kbd> New card from last field</span>
     <span style="display:flex;align-items:center;gap:0.35rem;font-size:0.72rem;color:var(--text-muted)"><kbd>Del</kbd> Delete empty card</span>

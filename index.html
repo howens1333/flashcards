@@ -767,7 +767,7 @@
         Download JSON
       </button>
       <div class="set-action-divider"></div>
-      <button class="set-action-item danger" onclick="closeModal('set-actions-modal');confirmDeleteSet('${id}','${s.title.replace(/'/g, "\\'")}')">
+      <button class="set-action-item danger" data-set-id="${id}" onclick="closeModal('set-actions-modal');confirmDeleteSet(this.dataset.setId, escapeHtml(getSet(this.dataset.setId)?.title||''))">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
         Delete Set
       </button>`;

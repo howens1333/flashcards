@@ -407,6 +407,7 @@
 <script src="app.js"></script>
 <script>
   const setId = getParam('id');
+  const safeSetId = encodeURIComponent(setId || '');
   let originalSet = null;
 
   // Session state
@@ -428,7 +429,7 @@
 
     document.title = originalSet.title + ' — Learn · Flashcards';
     document.getElementById('set-title').textContent = originalSet.title;
-    document.getElementById('back-link').href = 'study.html?id=' + setId;
+    document.getElementById('back-link').href = 'study.html?id=' + safeSetId;
     updateThemeLabel();
     startRound([...originalSet.cards]);
   }
@@ -603,7 +604,7 @@
         'You got all ' + originalSet.cards.length + ' cards correct.';
       document.getElementById('done-actions').innerHTML = `
         <button class="btn btn-secondary" onclick="restartFull()">↺ Start over</button>
-        <a class="btn btn-primary" href="test.html?id=${setId}">Take a Test →</a>`;
+        <a class="btn btn-primary" href="test.html?id=${safeSetId}">Take a Test →</a>`;
     } else {
       // Still some wrong — offer review round
       document.getElementById('done-emoji').textContent = '📚';

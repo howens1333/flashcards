@@ -307,6 +307,7 @@
 <script src="app.js"></script>
 <script>
   const setId = getParam('id');
+  const safeSetId = encodeURIComponent(setId || '');
   let currentSet = null;
 
   function updateThemeLabel() {
@@ -345,7 +346,7 @@
           <div class="empty-icon">📊</div>
           <h3>No test history yet</h3>
           <p>Take a test on this set to start tracking your progress.</p>
-          <a class="btn btn-primary" href="test.html?id=${setId}">Take a Test</a>
+          <a class="btn btn-primary" href="test.html?id=${safeSetId}">Take a Test</a>
         </div>`;
       document.getElementById('clear-btn').style.display = 'none';
       return;
