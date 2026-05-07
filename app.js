@@ -325,9 +325,10 @@ async function _initFirebase() {
 
     onAuthStateChanged(_auth, user => {
       _currentUser = user;
+      window._currentUser = user || null;
       if (user) {
         _startSync();
-        _updateSyncUI(true, user.displayName || user.email);
+        _updateSyncUI(true, user.displayName || user.email, user);
       } else {
         if (_syncUnsubscribe) { _syncUnsubscribe(); _syncUnsubscribe = null; }
         _updateSyncUI(false);
@@ -394,28 +395,144 @@ function syncSignOut() {
   if (_auth) _auth.signOut();
 }
 
-function _updateSyncUI(signedIn, name) {
+function _buildAvatar(photoURL, name, size, cls) {
+  if (photoURL) {
+    return `<img src="${photoURL}" class="${cls}" width="${size}" height="${size}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><span class="${cls.replace('avatar','avatar-fallback')}" style="display:none">${(name||'?')[0].toUpperCase()}</span>`;
+  }
+  return `<span class="${cls.replace('avatar','avatar-fallback')}">${(name||'?')[0].toUpperCase()}</span>`;
+}
+
+let _chipDropdownOpen = false;
+
+function _closeChipDropdown() {
+  const d = document.getElementById('acct-dropdown');
+  if (d) d.remove();
+  const chip = document.querySelector('.acct-chip');
+  if (chip) chip.classList.remove('open');
+  _chipDropdownOpen = false;
+}
+
+function _toggleChipDropdown(user) {
+  if (_chipDropdownOpen) { _closeChipDropdown(); return; }
+  _chipDropdownOpen = true;
+  const chip = document.querySelector('.acct-chip');
+  if (chip) chip.classList.add('open');
+
+  const wrap = document.getElementById('account-chip');
+  const dropdown = document.createElement('div');
+  dropdown.className = 'acct-dropdown';
+  dropdown.id = 'acct-dropdown';
+  dropdown.innerHTML = `
+    <div class="acct-dropdown-header">
+      ${_buildAvatar(user.photoURL, user.displayName, 40, 'acct-dropdown-avatar')}
+      <div>
+        <div class="acct-dropdown-name">${user.displayName || 'User'}</div>
+        <div class="acct-dropdown-email">${user.email || ''}</div>
+      </div>
+    </div>
+    <button class="acct-dropdown-item" id="dd-upload">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+      Upload to cloud
+    </button>
+    <button class="acct-dropdown-item" id="dd-download">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="21" x2="12" y2="12"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>
+      Download from cloud
+    </button>
+    <button class="acct-dropdown-item" id="dd-switch">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Switch account
+    </button>
+    <button class="acct-dropdown-item danger" id="dd-signout">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </button>`;
+
+  wrap.appendChild(dropdown);
+
+  dropdown.querySelector('#dd-upload').onclick   = () => { _closeChipDropdown(); syncPush().then(()=>toast('Uploaded!')); };
+  dropdown.querySelector('#dd-download').onclick = () => { _closeChipDropdown(); syncPull(); };
+  dropdown.querySelector('#dd-switch').onclick   = () => { _closeChipDropdown(); syncSwitchAccount(); };
+  dropdown.querySelector('#dd-signout').onclick  = () => { _closeChipDropdown(); syncSignOut(); };
+
+  // Close on outside click
+  setTimeout(() => document.addEventListener('click', _closeChipDropdown, { once: true }), 0);
+}
+
+function _updateSyncUI(signedIn, name, user) {
   const btn      = document.getElementById('sync-btn');
   const btnM     = document.getElementById('sync-btn-mobile');
+  const chipWrap = document.getElementById('account-chip');
+  const chipMob  = document.getElementById('account-chip-mobile');
   const pushD    = document.getElementById('sync-push-btn-desktop');
   const pullD    = document.getElementById('sync-pull-btn-desktop');
   const pushM    = document.getElementById('sync-push-btn-mobile');
   const pullM    = document.getElementById('sync-pull-btn-mobile');
-  if (signedIn) {
-    if (btn)   { btn.textContent = '✓ Signed in · Sign out'; btn.title = 'Signed in as ' + name; btn.onclick = syncSignOut; }
-    if (btnM)  { btnM.textContent = '✓ Sign out'; btnM.onclick = () => { if(typeof closeHamburger==='function')closeHamburger(); syncSignOut(); }; }
-    if (pushD) pushD.style.display = '';
-    if (pullD) pullD.style.display = '';
-    if (pushM) pushM.style.display = '';
-    if (pullM) pullM.style.display = '';
+
+  if (signedIn && user) {
+    // Hide sign-in button and upload/download pills — they're in the dropdown now
+    if (btn)   btn.style.display = 'none';
+    if (pushD) pushD.style.display = 'none';
+    if (pullD) pullD.style.display = 'none';
+    if (pushM) pushM.style.display = 'none';
+    if (pullM) pullM.style.display = 'none';
+    if (btnM)  btnM.style.display = 'none';
+
+    // ── Desktop chip ──
+    if (chipWrap) {
+      chipWrap.style.display = '';
+      chipWrap.innerHTML = `
+        <button class="acct-chip" onclick="_toggleChipDropdown(window._currentUser)" title="${user.email}">
+          ${_buildAvatar(user.photoURL, user.displayName, 24, 'acct-chip-avatar')}
+          <span class="acct-chip-name">${user.displayName || user.email}</span>
+          <svg class="acct-chip-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>`;
+    }
+
+    // ── Mobile chip (inside hamburger) ──
+    if (chipMob) {
+      chipMob.style.display = '';
+      chipMob.innerHTML = `
+        <div class="acct-chip-mobile">
+          ${_buildAvatar(user.photoURL, user.displayName, 36, 'acct-dropdown-avatar')}
+          <div class="acct-chip-mobile-info">
+            <div class="acct-chip-mobile-name">${user.displayName || 'User'}</div>
+            <div class="acct-chip-mobile-email">${user.email || ''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.4rem;margin-bottom:0.5rem">
+          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem" onclick="closeHamburger();syncPush().then(()=>toast('Uploaded!'))">↑ Upload</button>
+          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem" onclick="closeHamburger();syncPull()">↓ Download</button>
+        </div>
+        <div style="display:flex;gap:0.4rem">
+          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem" onclick="closeHamburger();syncSwitchAccount()">Switch account</button>
+          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem;color:var(--danger)" onclick="closeHamburger();syncSignOut()">Sign out</button>
+        </div>`;
+    }
   } else {
-    if (btn)   { btn.textContent = '☁ Sign in to Sync'; btn.title = 'Sync across devices with Google'; btn.onclick = syncSignIn; }
-    if (btnM)  { btnM.textContent = '☁ Sign in to Sync'; btnM.onclick = syncSignIn; }
+    // Signed out — restore sign-in button
+    if (btn)      { btn.style.display = ''; btn.innerHTML = '☁ Sign in to Sync'; btn.onclick = syncSignIn; }
+    if (btnM)     { btnM.style.display = ''; btnM.innerHTML = '☁ Sign in to Sync'; btnM.onclick = syncSignIn; }
+    if (chipWrap) { chipWrap.style.display = 'none'; chipWrap.innerHTML = ''; }
+    if (chipMob)  { chipMob.style.display = 'none'; chipMob.innerHTML = ''; }
     if (pushD) pushD.style.display = 'none';
     if (pullD) pullD.style.display = 'none';
     if (pushM) pushM.style.display = 'none';
     if (pullM) pullM.style.display = 'none';
   }
+}
+
+async function syncSwitchAccount() {
+  if (!_auth) return;
+  // Wait for onAuthStateChanged to confirm sign-out before opening new popup
+  // This prevents the previous popup from conflicting with the new one
+  await new Promise(resolve => {
+    const { onAuthStateChanged } = window._fb;
+    const unsub = onAuthStateChanged(_auth, user => {
+      if (!user) { unsub(); resolve(); }
+    });
+    _auth.signOut();
+  });
+  syncSignIn();
 }
 
 

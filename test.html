@@ -253,7 +253,6 @@
     <a id="study-link" href="#">Study</a>
     <a id="learn-link" href="#">Learn</a>
     <a id="focus-link" href="#">Focus</a>
-    <a id="edit-link" href="#">Edit</a>
     <a class="active-nav" id="test-link" href="#">Test</a>
     <a id="match-link" href="#">Match</a>
     <a id="stats-link" href="#">Stats</a>
@@ -261,8 +260,6 @@
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
     </button>
-  </div>
-</nav>
   </div>
 </nav>
 
@@ -386,7 +383,6 @@
     document.getElementById('learn-link').href = 'learn.html?id=' + setId;
     document.getElementById('results-study-link').href = 'study.html?id=' + setId;
     document.getElementById('stats-link').href = 'stats.html?id=' + setId;
-    document.getElementById('edit-link').href = 'edit.html?id=' + setId;
     document.getElementById('focus-link').href = 'flashcard.html?id=' + setId;
 
     const max = Math.min(currentSet.cards.length, 100);

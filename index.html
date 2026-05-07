@@ -358,19 +358,86 @@
     }
     .filter-chip:hover { background: var(--surface-2); color: var(--text); }
     .filter-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* ── ACCOUNT CHIP ── */
+    .acct-chip {
+      display: flex; align-items: center; gap: 0.5rem;
+      padding: 0.25rem 0.6rem 0.25rem 0.25rem;
+      border-radius: 99px; border: 1px solid var(--border);
+      background: var(--surface); cursor: pointer;
+      transition: all 0.15s; font-family: var(--font-body);
+      font-size: 0.8rem; font-weight: 500; color: var(--text);
+      white-space: nowrap; max-width: 200px;
+    }
+    .acct-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+    .acct-chip-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .acct-chip-avatar-fallback {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      font-size: 0.7rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .acct-chip-name { overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+    .acct-chip-caret { color: var(--text-muted); flex-shrink: 0; transition: transform 0.15s; }
+    .acct-chip.open .acct-chip-caret { transform: rotate(180deg); }
+    .acct-dropdown {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      min-width: 230px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-lg); z-index: 200; overflow: hidden;
+      animation: fadeInDown 0.12s ease;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .acct-dropdown-header {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.85rem 1rem; border-bottom: 1px solid var(--border);
+    }
+    .acct-dropdown-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .acct-dropdown-avatar-fallback {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-size: 1rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .acct-dropdown-name { font-weight: 600; font-size: 0.875rem; line-height: 1.3; }
+    .acct-dropdown-email { font-size: 0.72rem; color: var(--text-muted); }
+    .acct-dropdown-item {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.65rem 1rem; font-size: 0.85rem; cursor: pointer;
+      transition: background 0.12s; color: var(--text);
+      border: none; background: none; width: 100%;
+      text-align: left; font-family: var(--font-body);
+    }
+    .acct-dropdown-item:hover { background: var(--surface-2); }
+    .acct-dropdown-item.danger { color: var(--danger); }
+    .acct-dropdown-item.danger:hover { background: var(--danger-light); }
+    .acct-chip-mobile {
+      display: flex; align-items: center; gap: 0.65rem;
+      padding: 0.65rem 0.75rem; border-radius: var(--radius-sm);
+      border: 1px solid var(--border); background: var(--surface-2);
+    }
+    .acct-chip-mobile-info { flex: 1; min-width: 0; }
+    .acct-chip-mobile-name { font-weight: 600; font-size: 0.875rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .acct-chip-mobile-email { font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   </style>
 </head>
 <body>
 <nav>
   <a href="index.html" class="nav-brand">🎓 Flashcards</a>
   <div class="nav-links">
-    <button id="sync-btn" onclick="syncSignIn()" title="Sync across devices with Google" style="font-size:0.8rem;padding:0.35rem 0.85rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all 0.15s;line-height:1" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">☁ Sign in to Sync</button>
-    <button id="sync-push-btn-desktop" onclick="syncPush().then(()=>toast('Uploaded!'))" title="Upload to cloud" style="display:none;font-size:0.8rem;padding:0.35rem 0.75rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all 0.15s;line-height:1" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">↑</button>
-    <button id="sync-pull-btn-desktop" onclick="syncPull()" title="Download from cloud" style="display:none;font-size:0.8rem;padding:0.35rem 0.75rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all 0.15s;line-height:1" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-muted)'">↓</button>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
     </button>
+    <!-- Sync / Account chip (desktop) -->
+    <div id="sync-desktop-wrap" style="display:flex;align-items:center;gap:0.4rem;position:relative">
+      <button id="sync-push-btn-desktop" onclick="syncPush().then(()=>toast('Uploaded!'))" title="Upload to cloud" style="display:none;font-size:0.75rem;padding:0.3rem 0.6rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all 0.15s;line-height:1">↑ Upload</button>
+      <button id="sync-pull-btn-desktop" onclick="syncPull()" title="Download from cloud" style="display:none;font-size:0.75rem;padding:0.3rem 0.6rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all 0.15s;line-height:1">↓ Download</button>
+      <button id="sync-btn" onclick="syncSignIn()" title="Sync across devices with Google" style="font-size:0.8rem;padding:0.35rem 0.85rem;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:var(--font-body);font-weight:500;transition:all 0.15s;line-height:1">☁ Sign in to Sync</button>
+      <div id="account-chip" style="display:none;position:relative"></div>
+    </div>
   </div>
   <!-- Mobile hamburger -->
   <button class="hamburger-btn" onclick="openHamburger()" aria-label="Menu">
@@ -389,6 +456,8 @@
   </div>
 
   <div class="hamburger-section-label">Sync</div>
+  <!-- Mobile account chip (built by JS when signed in) -->
+  <div id="account-chip-mobile" style="display:none;margin-bottom:0.5rem"></div>
   <button class="btn btn-secondary" id="sync-btn-mobile" onclick="syncSignIn()">☁ Sign in to Sync</button>
   <button class="btn btn-secondary" id="sync-push-btn-mobile" onclick="closeHamburger();syncPush().then(()=>toast('Uploaded!'))" style="display:none">↑ Upload to Cloud</button>
   <button class="btn btn-secondary" id="sync-pull-btn-mobile" onclick="closeHamburger();syncPull()" style="display:none">↓ Download from Cloud</button>

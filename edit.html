@@ -68,7 +68,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius);
       display: grid;
-      grid-template-columns: 1.25rem 2rem 1fr 1fr auto;
+      grid-template-columns: 1.25rem 2rem 1fr 1fr;
       align-items: start;
       gap: 0.75rem;
       padding: 0.9rem 1rem;
@@ -109,29 +109,10 @@
       border-color: var(--accent);
     }
 
-    .card-row-actions {
-      display: flex;
-      align-items: center;
-      padding-top: 0.45rem;
-    }
-
-    .delete-card-btn {
-      background: none;
-      border: none;
-      padding: 0.35rem;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      color: var(--text-muted);
-      transition: all var(--transition);
-      display: flex;
-    }
-
-    .delete-card-btn:hover { color: var(--danger); background: var(--danger-light); }
-
     /* Column labels */
     .col-labels {
       display: grid;
-      grid-template-columns: 1.25rem 2rem 1fr 1fr auto;
+      grid-template-columns: 1.25rem 2rem 1fr 1fr;
       gap: 0.75rem;
       padding: 0 1rem;
       margin-bottom: 0.35rem;
@@ -239,13 +220,65 @@
       z-index: 10;
       pointer-events: none;
     }
+
+    /* ── CARD HOVER ACTIONS ── */
+    .card-row {
+      position: relative;
+    }
+    .card-row-hover-actions {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      display: flex;
+      gap: 0.3rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+      z-index: 10;
+    }
+    .card-row:hover .card-row-hover-actions {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .hover-action-btn {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.12s;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    .hover-action-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--accent); }
+    .hover-action-btn.danger:hover { background: var(--danger-light); color: var(--danger); border-color: var(--danger); }
+
+    /* ── SWAP ALL BUTTON ── */
+    .swap-all-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.3rem 0.65rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-body);
+    }
+    .swap-all-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
   </style>
 </head>
 <body>
 
 <nav>
   <a href="index.html" class="nav-brand">🎓 Flashcards</a>
-  <a href="index.html" class="mobile-back-btn" id="mobile-back">
+  <a href="#" class="mobile-back-btn" id="mobile-back">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
     Sets
   </a>
@@ -254,7 +287,6 @@
     <a id="study-link" href="#">Study</a>
     <a id="learn-link" href="#">Learn</a>
     <a id="focus-link" href="#">Focus</a>
-    <a class="active-nav" id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
     <a id="match-link" href="#">Match</a>
     <a id="stats-link" href="#">Stats</a>
@@ -368,6 +400,8 @@
     if (!currentSet) { window.location.href = 'index.html'; return; }
 
     document.title = `${currentSet.title} - Edit`;
+    const mb = document.getElementById('mobile-back');
+    if (mb) mb.href = `study.html?id=${setId}`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
     const learnEl = document.getElementById('learn-link');
@@ -420,9 +454,18 @@
           data-field="definition"
           oninput="updateCardField('${c.id}','definition',this.value);autoResize(this)"
         >${escapeHtml(c.definition)}</textarea>
-        <div class="card-row-actions">
-          <button class="delete-card-btn" title="Delete card (Del on empty field)" onclick="confirmDeleteCard('${c.id}')">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <div class="card-row-hover-actions">
+          <button class="hover-action-btn" title="Swap term & definition" onclick="swapCard('${c.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+          </button>
+          <button class="hover-action-btn" title="Duplicate card" onclick="duplicateCard('${c.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button class="hover-action-btn" title="Copy term to clipboard" onclick="copyCard('${c.id}','term')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+          </button>
+          <button class="hover-action-btn danger" title="Delete card" onclick="confirmDeleteCard('${c.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
           </button>
         </div>
       </div>
@@ -444,6 +487,45 @@
     });
 
     updateCount();
+  }
+
+
+  // ── CARD ACTIONS ──────────────────────────────────────────────────────────────
+
+  function swapCard(cardId) {
+    const card = currentSet.cards.find(c => c.id === cardId);
+    if (!card) return;
+    [card.term, card.definition] = [card.definition, card.term];
+    saveSet(currentSet);
+    renderCards();
+    toast('Term and definition swapped.');
+  }
+
+  function swapAllCards() {
+    currentSet.cards.forEach(c => { [c.term, c.definition] = [c.definition, c.term]; });
+    saveSet(currentSet);
+    renderCards();
+    toast('All terms and definitions swapped.');
+  }
+
+  function duplicateCard(cardId) {
+    const card = currentSet.cards.find(c => c.id === cardId);
+    if (!card) return;
+    const idx = currentSet.cards.indexOf(card);
+    const copy = createCard(card.term, card.definition);
+    currentSet.cards.splice(idx + 1, 0, copy);
+    saveSet(currentSet);
+    renderCards();
+    toast('Card duplicated.');
+  }
+
+  function copyCard(cardId, field) {
+    const card = currentSet.cards.find(c => c.id === cardId);
+    if (!card) return;
+    const text = field === 'term' ? card.term : card.definition;
+    navigator.clipboard.writeText(text)
+      .then(() => toast('Copied to clipboard.'))
+      .catch(() => toast('Could not copy.'));
   }
 
   // ── DRAG TO REORDER ───────────────────────────────────────────────────────────
@@ -614,6 +696,8 @@
     dirty = false;
     document.getElementById('save-bar').classList.add('hidden');
     document.title = `Edit: ${currentSet.title} – Flashcards`;
+    const mb2 = document.getElementById('mobile-back');
+    if (mb2) mb2.href = `study.html?id=${setId}`;
     const focusEl = document.getElementById('focus-link');
     if (focusEl) focusEl.href = `flashcard.html?id=${setId}`;
     const learnEl = document.getElementById('learn-link');

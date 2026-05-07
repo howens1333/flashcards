@@ -268,15 +268,13 @@
     <a id="study-link" href="#">Study</a>
     <a id="learn-link" href="#">Learn</a>
     <a id="focus-link" href="#">Focus</a>
-    <a id="edit-link" href="#">Edit</a>
     <a id="test-link" href="#">Test</a>
+    <a id="match-link" href="#">Match</a>
     <a class="active-nav" id="stats-link" href="#">Stats</a>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
       <span class="theme-toggle-track"></span>
       <span id="theme-label">Dark</span>
     </button>
-  </div>
-</nav>
   </div>
 </nav>
 <div class="container">
@@ -329,7 +327,6 @@
     document.getElementById('set-sub').textContent = currentSet.cards.length + ' cards · ' + (currentSet.description || '');
     document.getElementById('study-link').href = 'study.html?id=' + setId;
     document.getElementById('learn-link').href = 'learn.html?id=' + setId;
-    document.getElementById('edit-link').href = 'edit.html?id=' + setId;
     document.getElementById('test-link').href = 'test.html?id=' + setId;
     document.getElementById('match-link').href = 'match.html?id=' + setId;
     document.getElementById('focus-link').href = 'flashcard.html?id=' + setId;
