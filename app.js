@@ -26,7 +26,13 @@ const FOLDERS_KEY = 'flashdeck_folders';
 function getSets() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; }
 }
-function saveSets(sets) { localStorage.setItem(STORAGE_KEY, JSON.stringify(sets)); }
+function saveSets(sets) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sets)); }
+  catch (error) {
+    toast('Could not save: browser storage is full or unavailable. Export your set before leaving.', 6000);
+    throw error;
+  }
+}
 function getSet(id) { return getSets().find(s => s.id === id) || null; }
 function saveSet(set) {
   const sets = getSets();
@@ -43,8 +49,61 @@ function deleteSet(id) {
 function createSet(title, description='', folderId=null) {
   return { id: crypto.randomUUID(), title, description, folderId, created: Date.now(), modified: Date.now(), cards: [] };
 }
-function createCard(term='', definition='') {
-  return { id: crypto.randomUUID(), term, definition };
+function createCard(term='', definition='', images={}) {
+  return { id: crypto.randomUUID(), term, definition, ...cardImages(images) };
+}
+
+// Images are embedded locally so JSON exports are self-contained.
+function validCardImage(value) {
+  return typeof value === 'string' && /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/.test(value);
+}
+function cardImages(card) {
+  const images = {};
+  for (const side of ['term', 'definition']) {
+    const key = side + 'Image';
+    if (validCardImage(card[key])) images[key] = card[key];
+  }
+  return images;
+}
+function cardSideHtml(card, side) {
+  const text = escapeHtml(card[side]);
+  const image = card[side + 'Image'];
+  return (validCardImage(image) ? `<img class="card-image" src="${image}" alt="${side === 'term' ? 'Term' : 'Definition'} image" draggable="false">` : '') +
+    (text ? `<span class="card-side-text">${text}</span>` : '');
+}
+function renderCardSide(element, card, side) {
+  element.innerHTML = cardSideHtml(card, side);
+}
+function swapCardSides(card) {
+  [card.term, card.definition] = [card.definition, card.term];
+  [card.termImage, card.definitionImage] = [card.definitionImage, card.termImage];
+}
+async function prepareCardImage(file) {
+  if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
+    throw new Error('Choose a PNG, JPEG, WebP, or GIF image.');
+  }
+  if (file.size > 10 * 1024 * 1024) throw new Error('Choose an image smaller than 10 MB.');
+  const url = URL.createObjectURL(file);
+  try {
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('This image could not be opened.'));
+      img.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    const scale = Math.min(1, 1280 / Math.max(image.width, image.height));
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const ctx = canvas.getContext('2d');
+    // White backing keeps transparent diagrams readable in both themes.
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const data = canvas.toDataURL('image/jpeg', 0.8);
+    if (data.length > 400 * 1024) throw new Error('This image is too detailed. Crop it or choose a smaller image.');
+    return data;
+  } finally { URL.revokeObjectURL(url); }
 }
 
 // ── STORAGE: FOLDERS ──────────────────────────────────────────────────────────
@@ -78,7 +137,7 @@ function combineSets(setIds, newTitle, newDescription='') {
   const sets = setIds.map(id => getSet(id)).filter(Boolean);
   if (sets.length < 2) { toast('Select at least 2 sets to combine.'); return null; }
   const combined = createSet(newTitle, newDescription);
-  sets.forEach(s => s.cards.forEach(c => combined.cards.push(createCard(c.term, c.definition))));
+  sets.forEach(s => s.cards.forEach(c => combined.cards.push(createCard(c.term, c.definition, c))));
   saveSet(combined);
   toast('Combined ' + sets.length + ' sets into "' + newTitle + '" (' + combined.cards.length + ' cards).');
   return combined;
@@ -113,13 +172,15 @@ function importFromJson(json, onSuccess) {
     const data = JSON.parse(json);
     if (data.flashdeck && Array.isArray(data.sets)) {
       let imported = 0;
+      const sets = getSets();
       data.sets.forEach(set => {
         set.id = crypto.randomUUID();
         set.modified = Date.now();
         set.folderId = null;
-        saveSet(set);
+        sets.push(set);
         imported++;
       });
+      saveSets(sets);
       toast('Imported ' + imported + ' set' + (imported !== 1 ? 's' : '') + '.');
     } else if (data.title && Array.isArray(data.cards)) {
       data.id = crypto.randomUUID();
@@ -131,7 +192,7 @@ function importFromJson(json, onSuccess) {
       toast('Invalid format — expected Flashcards JSON.'); return;
     }
     if (onSuccess) onSuccess();
-  } catch { toast('Could not parse JSON.'); }
+  } catch (error) { if (error instanceof SyntaxError) toast('Could not parse JSON.'); else toast('Import failed. Check the file and available browser storage.'); }
 }
 
 function importFromFile(file, onSuccess) {
@@ -143,6 +204,11 @@ function importFromFile(file, onSuccess) {
 // ── SHARE VIA URL ─────────────────────────────────────────────────────────────
 
 function setToShareUrl(set) {
+  if (set.cards.some(c => c.termImage || c.definitionImage)) {
+    toast('Images are included in JSON exports. Downloading this set to share.');
+    exportSet(set);
+    return null;
+  }
   const slim = {
     title: set.title,
     description: set.description || '',
