@@ -472,7 +472,7 @@
 
     document.title = originalSet.title + ' — Focus · Flashcards';
     document.getElementById('focus-title').textContent = originalSet.title;
-    document.getElementById('back-link').href = 'study.html?id=' + setId;
+    document.getElementById('study-link').href = 'study.html?id=' + setId;
     document.getElementById('mobile-back').href = 'study.html?id=' + setId;
     document.getElementById('learn-link').href = 'learn.html?id=' + setId;
     document.getElementById('learn-link-drawer').href = 'learn.html?id=' + setId;
@@ -494,7 +494,7 @@
 
     revealed = false;
     document.getElementById('card-label').textContent = showDef ? 'Definition' : 'Term';
-    document.getElementById('card-text').textContent  = showDef ? card.definition : card.term;
+    renderCardSide(document.getElementById('card-text'), card, showDef ? 'definition' : 'term');
     document.getElementById('focus-card').classList.remove('revealed');
     document.getElementById('tap-hint').textContent = 'Tap to reveal';
 
@@ -527,7 +527,7 @@
     const showDef = document.getElementById('defsfirst-tog').checked;
 
     document.getElementById('card-label').textContent = showDef ? 'Term' : 'Definition';
-    document.getElementById('card-text').textContent  = showDef ? card.term : card.definition;
+    renderCardSide(document.getElementById('card-text'), card, showDef ? 'term' : 'definition');
     document.getElementById('focus-card').classList.add('revealed');
     document.getElementById('tap-hint').textContent = 'Tap to continue';
 

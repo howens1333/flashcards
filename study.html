@@ -625,8 +625,8 @@
 
     document.getElementById('front-label').textContent = showDef ? 'Definition' : 'Term';
     document.getElementById('back-label').textContent  = showDef ? 'Term' : 'Definition';
-    document.getElementById('front-text').textContent  = showDef ? card.definition : card.term;
-    document.getElementById('back-text').textContent   = showDef ? card.term : card.definition;
+    renderCardSide(document.getElementById('front-text'), card, showDef ? 'definition' : 'term');
+    renderCardSide(document.getElementById('back-text'), card, showDef ? 'term' : 'definition');
 
     // Progress bar
     const pct = total ? ((idx + 1) / total * 100) : 0;
@@ -748,8 +748,8 @@
     const list = document.getElementById('cards-list');
     list.innerHTML = originalSet.cards.map(c => `
       <div class="term-card">
-        <div class="term-card-term">${escapeHtml(c.term)}</div>
-        <div class="term-card-def">${escapeHtml(c.definition)}</div>
+        <div class="term-card-term">${cardSideHtml(c, 'term')}</div>
+        <div class="term-card-def">${cardSideHtml(c, 'definition')}</div>
       </div>
     `).join('');
   }
@@ -805,6 +805,7 @@
   function shareSet() {
     if (!originalSet) return;
     const url = setToShareUrl(originalSet);
+    if (!url) return;
     navigator.clipboard.writeText(url)
       .then(() => toast("Share link copied to clipboard!"))
       .catch(() => prompt("Copy this share link:", url));

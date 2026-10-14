@@ -186,7 +186,7 @@
         padding-top: 0.6rem;
       }
       /* Both textareas fill col 2, stacked */
-      .card-row textarea {
+      .card-row .card-side-editor {
         grid-column: 2;
       }
       /* Hover actions float top-right as usual */
@@ -366,6 +366,7 @@
 <!-- Floating save bar -->
 <div class="save-bar hidden" id="save-bar">
   Unsaved changes
+  <button class="btn btn-secondary" onclick="exportSet(currentSet)">Export JSON</button>
   <button class="btn btn-primary" style="border-radius:99px;padding:0.4rem 1rem" onclick="saveAll()">Save</button>
 </div>
 
@@ -444,6 +445,44 @@
   const _origToggleTheme = toggleTheme;
   window.toggleTheme = function() { _origToggleTheme(); updateThemeLabel(); };
 
+  function persistCardChanges() {
+    try { saveSet(currentSet); }
+    catch { markDirty(); }
+  }
+
+  function imageEditor(card, side) {
+    const hasImage = validCardImage(card[side + 'Image']);
+    return `<div class="image-editor">
+      ${hasImage ? `<img class="card-image" src="${card[side + 'Image']}" alt="${side} image preview">` : ''}
+      <label class="btn btn-secondary image-upload">${hasImage ? 'Replace' : 'Add'} image
+        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Upload ${side} image" onchange="uploadCardImage('${card.id}', '${side}', this)">
+      </label>
+      ${hasImage ? `<button class="btn btn-secondary" onclick="removeCardImage('${card.id}', '${side}')">Remove image</button>` : ''}
+    </div>`;
+  }
+  async function uploadCardImage(id, side, input) {
+    const file = input.files[0];
+    if (!file) return;
+    input.disabled = true;
+    try {
+      const data = await prepareCardImage(file);
+      const card = currentSet.cards.find(c => c.id === id);
+      if (!card) return;
+      card[side + 'Image'] = data;
+      markDirty();
+      renderCards();
+      toast('Image added. Save your changes to keep it on this device.');
+    } catch (error) { toast(error.message, 5000); }
+    finally { input.disabled = false; input.value = ''; }
+  }
+  function removeCardImage(id, side) {
+    const card = currentSet.cards.find(c => c.id === id);
+    if (!card) return;
+    delete card[side + 'Image'];
+    markDirty();
+    renderCards();
+  }
+
   function renderCards() {
     const list = document.getElementById('cards-list');
     if (!currentSet.cards.length) {
@@ -457,18 +496,18 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg>
         </span>
         <span class="card-num">${i + 1}</span>
-        <textarea
-          placeholder="Term"
+        <div class="card-side-editor"><textarea
+          aria-label="Term" placeholder="Term"
           data-card-id="${c.id}"
           data-field="term"
           oninput="updateCardField('${c.id}','term',this.value);autoResize(this)"
-        >${escapeHtml(c.term)}</textarea>
-        <textarea
-          placeholder="Definition"
+        >${escapeHtml(c.term)}</textarea>${imageEditor(c, 'term')}</div>
+        <div class="card-side-editor"><textarea
+          aria-label="Definition" placeholder="Definition"
           data-card-id="${c.id}"
           data-field="definition"
           oninput="updateCardField('${c.id}','definition',this.value);autoResize(this)"
-        >${escapeHtml(c.definition)}</textarea>
+        >${escapeHtml(c.definition)}</textarea>${imageEditor(c, 'definition')}</div>
         <div class="card-row-hover-actions">
           <button class="hover-action-btn" title="Swap term & definition" onclick="swapCard('${c.id}')">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
@@ -510,15 +549,15 @@
   function swapCard(cardId) {
     const card = currentSet.cards.find(c => c.id === cardId);
     if (!card) return;
-    [card.term, card.definition] = [card.definition, card.term];
-    saveSet(currentSet);
+    swapCardSides(card);
+    persistCardChanges();
     renderCards();
     toast('Term and definition swapped.');
   }
 
   function swapAllCards() {
-    currentSet.cards.forEach(c => { [c.term, c.definition] = [c.definition, c.term]; });
-    saveSet(currentSet);
+    currentSet.cards.forEach(c => { swapCardSides(c); });
+    persistCardChanges();
     renderCards();
     toast('All terms and definitions swapped.');
   }
@@ -527,9 +566,9 @@
     const card = currentSet.cards.find(c => c.id === cardId);
     if (!card) return;
     const idx = currentSet.cards.indexOf(card);
-    const copy = createCard(card.term, card.definition);
+    const copy = createCard(card.term, card.definition, card);
     currentSet.cards.splice(idx + 1, 0, copy);
-    saveSet(currentSet);
+    persistCardChanges();
     renderCards();
     toast('Card duplicated.');
   }
@@ -577,7 +616,7 @@
     // Reorder in data
     const [moved] = currentSet.cards.splice(srcIdx, 1);
     currentSet.cards.splice(tgtIdx, 0, moved);
-    saveSet(currentSet);
+    persistCardChanges();
     renderCards();
   }
 
@@ -707,7 +746,7 @@
     currentSet.title = title;
     currentSet.description = document.getElementById('edit-desc').value.trim();
     currentSet.modified = Date.now();
-    saveSet(currentSet);
+    try { saveSet(currentSet); } catch { return false; }
     dirty = false;
     document.getElementById('save-bar').classList.add('hidden');
     document.title = `Edit: ${currentSet.title} – Flashcards`;
@@ -726,16 +765,17 @@
     const statsEl = document.getElementById('stats-link');
     if (statsEl) statsEl.href = `stats.html?id=${setId}`;
     toast('Saved!');
+    return true;
   }
 
   function goTest() {
-    if (dirty) saveAll();
+    if (dirty && !saveAll()) return;
     if (!currentSet.cards.length) { toast("Add some cards first."); return; }
     window.location.href = `test.html?id=${setId}`;
   }
 
   function goStudy() {
-    if (dirty) saveAll();
+    if (dirty && !saveAll()) return;
     if (!currentSet.cards.length) { toast('Add some cards first.'); return; }
     window.location.href = `study.html?id=${setId}`;
   }

@@ -429,13 +429,14 @@
 
     document.title = originalSet.title + ' — Learn · Flashcards';
     document.getElementById('set-title').textContent = originalSet.title;
-    document.getElementById('back-link').href = 'study.html?id=' + safeSetId;
+    document.getElementById('study-link').href = 'study.html?id=' + safeSetId;
     updateThemeLabel();
     startRound([...originalSet.cards]);
   }
 
   function startRound(cards) {
-    queue = shuffle(cards);
+    queue = shuffle(cards.filter(c => c.term.trim()));
+    if (!queue.length) toast('Learn needs text on the term side. Use Cards or Match for image-only cards.');
     wrongIds = new Set();
     roundCorrect = 0;
     roundWrong = 0;
@@ -455,7 +456,7 @@
     answered = false;
 
     document.getElementById('q-label').textContent = 'Definition';
-    document.getElementById('q-text').textContent = currentCard.definition;
+    renderCardSide(document.getElementById('q-text'), currentCard, 'definition');
 
     const input = document.getElementById('answer-input');
     input.value = '';
@@ -526,7 +527,7 @@
     fb.className = 'feedback-row incorrect-fb';
     document.getElementById('feedback-icon').textContent = '✗';
     document.getElementById('feedback-msg').textContent = 'The correct answer was:';
-    document.getElementById('feedback-answer').textContent = currentCard.term;
+    renderCardSide(document.getElementById('feedback-answer'), currentCard, 'term');
     document.getElementById('override-btn').style.display = '';
 
     swapToNext();

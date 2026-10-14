@@ -416,7 +416,11 @@
   function startTest() {
     const total = parseInt(document.getElementById('q-count').value);
     const doShuffle = document.getElementById('shuffle-q').checked;
-    const cards = doShuffle ? shuffle(currentSet.cards) : [...currentSet.cards];
+    const eligible = currentSet.cards.filter(c => testMode === 'diction'
+      ? c.term.trim() : (testDir === 'definitions' ? c.term.trim() : c.definition.trim()));
+    if (!eligible.length) { toast('Add text to the answer side to use this test mode.'); return; }
+    if (eligible.length < currentSet.cards.length) toast('Cards without answer text were skipped.');
+    const cards = doShuffle ? shuffle(eligible) : eligible;
     const pool = cards.slice(0, total);
 
     lastTestConfig = { total, doShuffle };
@@ -442,7 +446,7 @@
 
     if (testMode === 'mcq') {
       // Pick 3 wrong distractors from other cards
-      const others = currentSet.cards.filter(c => c.id !== card.id);
+      const others = currentSet.cards.filter(c => c.id !== card.id && (testDir === 'definitions' ? c.term.trim() : c.definition.trim()));
       const distractors = shuffle(others)
         .slice(0, 3)
         .map(c => testDir === 'definitions' ? c.term : c.definition);
@@ -472,7 +476,7 @@
       area.innerHTML = `
         <div class="question-card">
           <div class="question-num">Question ${qIdx + 1} of ${total}</div>
-          <div class="question-text">${escapeHtml(q.question)}</div>
+          <div class="question-text">${cardSideHtml(q.card, testDir === 'definitions' ? 'definition' : 'term')}</div>
           <div class="question-prompt">${promptText}</div>
           <div class="mcq-options" id="mcq-options">
             ${q.options.map((opt, i) => `
@@ -486,7 +490,7 @@
       area.innerHTML = `
         <div class="question-card">
           <div class="question-num">Question ${qIdx + 1} of ${total}</div>
-          <div class="question-text">${escapeHtml(q.question)}</div>
+          <div class="question-text">${cardSideHtml(q.card, testDir === 'definitions' ? 'definition' : 'term')}</div>
           <div class="question-prompt" style="margin-bottom:1rem">${promptText}</div>
           <div class="written-wrap">
             <textarea class="written-input" autocorrect="off" oncontextmenu="return false;" spellcheck="false" id="written-answer" rows="2"

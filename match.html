@@ -443,8 +443,8 @@
 
   function renderGrid() {
     const grid = document.getElementById('match-grid');
-    const terms = shuffle(batchCards.map(c => ({ id: c.id, text: c.term,       side: 'term' })));
-    const defs  = shuffle(batchCards.map(c => ({ id: c.id, text: c.definition, side: 'def'  })));
+    const terms = shuffle(batchCards.map(c => ({ id: c.id, text: c.term, image: c.termImage,       side: 'term' })));
+    const defs  = shuffle(batchCards.map(c => ({ id: c.id, text: c.definition, image: c.definitionImage, side: 'def'  })));
 
     // Interleave: col 1 = terms, col 2 = defs, same row index
     // Grid is 2-col so we just push all terms first then all defs;
@@ -463,7 +463,7 @@
     el.className = 'match-tile';
     el.dataset.id   = item.id;
     el.dataset.side = item.side;
-    el.textContent  = item.text;
+    renderCardSide(el, { term: item.text, termImage: item.image }, 'term');
     el.addEventListener('click', () => handleTileClick(item, el));
     return el;
   }
