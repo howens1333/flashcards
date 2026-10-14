@@ -7,7 +7,7 @@ const vm = require('node:vm');
   for (const file of fs.readdirSync('.').filter(f => f.endsWith('.html'))) {
     for (const [, script] of fs.readFileSync(file, 'utf8').matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) new vm.Script(script, { filename: file });
   }
-  const browser = await chromium.launch({headless:true, args:['--no-sandbox']});
+  const browser = await chromium.launch({headless:true, ...(process.env.CHROMIUM_PATH ? {executablePath:process.env.CHROMIUM_PATH} : {}), args:['--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--use-gl=angle','--no-zygote']});
   const context = await browser.newContext({serviceWorkers:'block', acceptDownloads:true});
   const page = await context.newPage();
   const errors = [];

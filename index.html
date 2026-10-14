@@ -384,7 +384,8 @@
       position: absolute; top: calc(100% + 6px); right: 0;
       min-width: 230px; background: var(--surface);
       border: 1px solid var(--border); border-radius: var(--radius);
-      box-shadow: var(--shadow-lg); z-index: 200; overflow: hidden;
+      box-shadow: var(--shadow-lg); z-index: 200; overflow-x: hidden; overflow-y: auto;
+      max-width: calc(100vw - 2rem); max-height: calc(100vh - 90px); max-height: calc(100dvh - 90px);
       animation: fadeInDown 0.12s ease;
     }
     @keyframes fadeInDown {
