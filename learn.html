@@ -418,6 +418,18 @@
   let masteredIds = new Set();
   let round = 1;
   let currentCard = null;
+  let answerSide = 'term';
+  let learnableCards = [];
+
+  // Keep the usual definition-to-term direction for text terms.
+  // Image-only terms instead prompt for the definition.
+  function learnAnswerSide(card) {
+    const term = (card.term || '').trim();
+    const definition = (card.definition || '').trim();
+    if (term && (definition || validCardImage(card.definitionImage))) return 'term';
+    if (validCardImage(card.termImage) && definition) return 'definition';
+    return null;
+  }
   let answered = false;    // has the current card been checked?
   let roundCorrect = 0;
   let roundWrong = 0;
@@ -433,12 +445,13 @@
     document.getElementById('set-title').textContent = originalSet.title;
     document.getElementById('study-link').href = 'study.html?id=' + safeSetId;
     updateThemeLabel();
-    startRound([...originalSet.cards]);
+    learnableCards = originalSet.cards.filter(c => learnAnswerSide(c));
+    startRound([...learnableCards]);
   }
 
   function startRound(cards) {
-    queue = shuffle(cards.filter(c => c.term.trim()));
-    if (!queue.length) toast('Learn needs text on the term side. Use Cards or Match for image-only cards.');
+    queue = shuffle(cards.filter(c => learnAnswerSide(c)));
+    currentCard = null;
     wrongIds = new Set();
     roundCorrect = 0;
     roundWrong = 0;
@@ -457,14 +470,17 @@
     currentCard = queue.shift();
     answered = false;
 
-    document.getElementById('q-label').textContent = 'Definition';
-    renderCardSide(document.getElementById('q-text'), currentCard, 'definition');
+    answerSide = learnAnswerSide(currentCard);
+    const promptSide = answerSide === 'term' ? 'definition' : 'term';
+    document.getElementById('q-label').textContent = promptSide === 'term' ? 'Term image — type the definition' : 'Definition — type the term';
+    renderCardSide(document.getElementById('q-text'), currentCard, promptSide);
 
     const input = document.getElementById('answer-input');
     input.value = '';
     input.className = 'answer-input';
     input.disabled = false;
-    input.placeholder = 'Type the term…';
+    input.placeholder = answerSide === 'term' ? 'Type the term…' : 'Type the definition…';
+    input.setAttribute('aria-label', answerSide === 'term' ? 'Term answer' : 'Definition answer');
 
     document.getElementById('feedback-row').style.display = 'none';
     document.getElementById('feedback-row').className = 'feedback-row';
@@ -481,6 +497,7 @@
   // ── CHECKING ──────────────────────────────────────────────────────────────────
 
   function checkAnswer() {
+    if (!currentCard) return;
     if (answered) { nextCard(); return; }
     const input = document.getElementById('answer-input');
     const userAns = input.value.trim();
@@ -489,7 +506,7 @@
     answered = true;
     input.disabled = true;
 
-    const correct = userAns.toLowerCase() === currentCard.term.toLowerCase();
+    const correct = userAns.toLowerCase() === currentCard[answerSide].trim().toLowerCase();
 
     if (correct) {
       markCorrect();
@@ -529,7 +546,7 @@
     fb.className = 'feedback-row incorrect-fb';
     document.getElementById('feedback-icon').textContent = '✗';
     document.getElementById('feedback-msg').textContent = 'The correct answer was:';
-    renderCardSide(document.getElementById('feedback-answer'), currentCard, 'term');
+    renderCardSide(document.getElementById('feedback-answer'), currentCard, answerSide);
     document.getElementById('override-btn').style.display = '';
 
     swapToNext();
@@ -567,14 +584,14 @@
   // ── PROGRESS ──────────────────────────────────────────────────────────────────
 
   function updateProgress() {
-    const total = originalSet.cards.length;
+    const total = learnableCards.length;
     const done = masteredIds.size;
     const pct = total ? (done / total * 100) : 0;
     document.getElementById('progress-fill').style.width = pct + '%';
     document.getElementById('progress-label').textContent = done + ' / ' + total;
 
     document.getElementById('tag-mastered').textContent = '✓ ' + masteredIds.size + ' mastered';
-    document.getElementById('tag-remaining').textContent = (queue.length + (answered ? 0 : 1)) + ' remaining';
+    document.getElementById('tag-remaining').textContent = (queue.length + (currentCard && !answered ? 1 : 0)) + ' remaining';
 
     const wrongTag = document.getElementById('tag-wrong');
     if (wrongIds.size > 0) {
@@ -588,6 +605,8 @@
   // ── END OF ROUND ──────────────────────────────────────────────────────────────
 
   function endRound() {
+    currentCard = null;
+    updateProgress();
     document.getElementById('question-card').style.display = 'none';
     document.getElementById('action-row').style.display = 'none';
 
@@ -599,12 +618,18 @@
 
     const wrongCards = originalSet.cards.filter(c => wrongIds.has(c.id));
 
-    if (wrongCards.length === 0) {
+    if (!learnableCards.length) {
+      document.getElementById('done-emoji').textContent = '📝';
+      document.getElementById('done-heading').textContent = 'Add an answer to learn';
+      document.getElementById('done-msg').textContent = 'Each card needs a prompt and a text answer. For an image-only term, add its name or description on the definition side.';
+      document.getElementById('done-actions').innerHTML = `<a class="btn btn-primary" href="edit.html?id=${safeSetId}">Edit Set</a>`;
+    } else if (wrongCards.length === 0) {
       // Perfect — all mastered
       document.getElementById('done-emoji').textContent = '🎉';
       document.getElementById('done-heading').textContent = round === 1 ? 'Perfect round!' : 'All done!';
       document.getElementById('done-msg').textContent =
-        'You got all ' + originalSet.cards.length + ' cards correct.';
+        'You got all ' + learnableCards.length + ' learnable cards correct.' +
+        (learnableCards.length < originalSet.cards.length ? ' ' + (originalSet.cards.length - learnableCards.length) + ' cards without a prompt and text answer were skipped.' : '');
       document.getElementById('done-actions').innerHTML = `
         <button class="btn btn-secondary" onclick="restartFull()">↺ Start over</button>
         <a class="btn btn-primary" href="test.html?id=${safeSetId}">Take a Test →</a>`;
@@ -634,7 +659,7 @@
     round = 1;
     masteredIds = new Set();
     wrongIds = new Set();
-    startRound([...originalSet.cards]);
+    startRound([...learnableCards]);
   }
 
   // ── THEME ─────────────────────────────────────────────────────────────────────
@@ -651,7 +676,7 @@
 
   document.addEventListener('keydown', e => {
     const input = document.getElementById('answer-input');
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && currentCard) {
       e.preventDefault();
       if (!answered) {
         if (input && input.value.trim()) checkAnswer();
