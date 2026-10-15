@@ -255,7 +255,7 @@
   </style>
 </head>
 <body>
-<nav>
+<nav class="set-nav" aria-label="Set navigation">
   <a href="index.html" class="nav-brand">🎓 Flashcards</a>
   <a href="index.html" class="mobile-back-btn" id="mobile-back">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -362,6 +362,8 @@
   let batchIdx = 0;
   let batchCards = [];
 
+  let resolvingPair = false;
+  let roundVersion = 0;
   let selectedTerm = null;   // { id, el }
   let selectedDef  = null;   // { id, el }
   let matchedIds   = new Set();
@@ -381,7 +383,7 @@
   function init() {
     if (!setId) { window.location.href = 'index.html'; return; }
     currentSet = getSet(setId);
-    if (!currentSet || currentSet.cards.length < 2) {
+    if (!currentSet || !currentSet.cards.length) {
       window.location.href = 'index.html'; return;
     }
 
@@ -413,6 +415,8 @@
   // ── BATCHES ───────────────────────────────────────────────────────────────────
 
   function startBatch(idx) {
+    roundVersion++;
+    resolvingPair = false;
     batchIdx = idx;
     batchCards = batches[idx];
     matchedIds = new Set();
@@ -464,6 +468,11 @@
     el.dataset.id   = item.id;
     el.dataset.side = item.side;
     renderCardSide(el, { term: item.text, termImage: item.image }, 'term');
+    el.setAttribute('role', 'button');
+    el.tabIndex = 0;
+    el.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); handleTileClick(item, el); }
+    });
     el.addEventListener('click', () => handleTileClick(item, el));
     return el;
   }
@@ -471,8 +480,7 @@
   // ── CLICK LOGIC ───────────────────────────────────────────────────────────────
 
   function handleTileClick(item, el) {
-    if (matchedIds.has(item.id + '-' + item.side)) return;
-    if (matchedIds.has(item.id) && item.side === 'term') return;
+    if (resolvingPair || matchedIds.has(item.id)) return;
 
     // Deselect if clicking the already-selected tile
     if (item.side === 'term' && selectedTerm && selectedTerm.id === item.id && selectedTerm.side === 'term') {
@@ -504,6 +512,8 @@
   }
 
   function checkMatch() {
+    resolvingPair = true;
+    const version = roundVersion;
     const termEl = selectedTerm.el;
     const defEl  = selectedDef.el;
     const isMatch = selectedTerm.id === selectedDef.id;
@@ -517,6 +527,8 @@
       defEl.classList.add('match-flash');
 
       setTimeout(() => {
+        if (version !== roundVersion) return;
+        resolvingPair = false;
         termEl.classList.remove('match-flash', 'selected');
         defEl.classList.remove('match-flash', 'selected');
         termEl.classList.add('matched');
@@ -531,7 +543,7 @@
 
       // Check if batch is complete
       if (matchedIds.size === batchCards.length) {
-        setTimeout(() => showBatchComplete(), 550);
+        setTimeout(() => { if (version === roundVersion) showBatchComplete(); }, 550);
       }
     } else {
       totalWrong++;
@@ -540,6 +552,8 @@
       defEl.classList.add('wrong');
 
       setTimeout(() => {
+        if (version !== roundVersion) return;
+        resolvingPair = false;
         termEl.classList.remove('wrong', 'selected');
         defEl.classList.remove('wrong', 'selected');
         selectedTerm = null;
@@ -622,6 +636,7 @@
       batches.push(allCards.slice(i, i + BATCH_SIZE));
     }
     document.getElementById('results-screen').classList.remove('show');
+    document.getElementById('match-timer').textContent = formatTime(0);
     startBatch(0);
     startTimer();
   }

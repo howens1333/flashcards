@@ -632,3 +632,32 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+// Bind every set-page tab in one place, including Match and Edit.
+function configureSetNavigation() {
+  const nav = document.querySelector('nav.set-nav');
+  const id = getParam('id');
+  if (!nav || !id) return;
+  const destinations = { study: 'study.html', learn: 'learn.html', focus: 'flashcard.html',
+    test: 'test.html', match: 'match.html', stats: 'stats.html', edit: 'edit.html' };
+  const links = nav.querySelector('.nav-links');
+  if (!links.querySelector('#edit-link')) {
+    const edit = document.createElement('a');
+    edit.id = 'edit-link'; edit.textContent = 'Edit';
+    links.insertBefore(edit, links.querySelector('.theme-toggle'));
+  }
+  const page = window.location.pathname.split('/').pop();
+  for (const [tab, file] of Object.entries(destinations)) {
+    const link = nav.querySelector('#' + tab + '-link');
+    if (!link) continue;
+    link.href = file + '?id=' + encodeURIComponent(id);
+    link.classList.toggle('active-nav', page === file);
+    if (page === file) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  }
+  const back = nav.querySelector('.mobile-back-btn');
+  if (back) {
+    back.href = 'index.html';
+    back.lastChild.textContent = ' Sets';
+  }
+}
+window.addEventListener('DOMContentLoaded', configureSetNavigation);

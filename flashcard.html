@@ -276,6 +276,8 @@
       top: 0; right: 0;
       width: min(300px, 85vw);
       height: 100vh;
+      height: 100dvh;
+      visibility: hidden;
       background: var(--surface);
       border-left: 1px solid var(--border);
       box-shadow: -8px 0 32px rgba(0,0,0,0.12);
@@ -288,7 +290,7 @@
       gap: 1rem;
       overflow-y: auto;
     }
-    .settings-drawer.open { transform: translateX(0); }
+    .settings-drawer.open { transform: translateX(0); visibility: visible; }
     .drawer-overlay {
       position: fixed; inset: 0;
       background: rgba(0,0,0,0.3);
@@ -332,7 +334,7 @@
   </style>
 </head>
 <body>
-<nav>
+<nav class="set-nav" aria-label="Set navigation">
   <a href="index.html" class="nav-brand"><span class="dot"></span> Flashcards</a>
   <a href="index.html" class="mobile-back-btn" id="mobile-back">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -389,7 +391,7 @@
     <div class="done-actions">
       <button class="btn btn-secondary" onclick="restart(false)">↺ Restart</button>
       <button class="btn btn-secondary" onclick="restart(true)">Shuffle & Restart</button>
-      <a class="btn btn-primary" id="learn-link" href="#">Try Learn Mode</a>
+      <a class="btn btn-primary" id="done-learn-link" href="#">Try Learn Mode</a>
     </div>
   </div>
 
@@ -475,6 +477,7 @@
     document.getElementById('study-link').href = 'study.html?id=' + setId;
     document.getElementById('mobile-back').href = 'study.html?id=' + setId;
     document.getElementById('learn-link').href = 'learn.html?id=' + setId;
+    document.getElementById('done-learn-link').href = 'learn.html?id=' + setId;
     document.getElementById('learn-link-drawer').href = 'learn.html?id=' + setId;
     document.getElementById('test-link-drawer').href = 'test.html?id=' + setId;
     document.getElementById('done-count').textContent =
