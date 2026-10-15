@@ -714,3 +714,28 @@ h1, h2, h3, .nav-brand { font-weight: 650; }
 }
 
 .hamburger-menu > *, .settings-drawer > * { flex-shrink: 0; }
+
+/* Consistent set navigation and compact mobile drawer */
+.set-nav .nav-links { gap: .35rem; }
+.set-nav .nav-links a { border-radius: 10px; }
+.set-nav .nav-links a.active-nav, .set-nav .nav-links a[aria-current="page"] { background: var(--surface-2); color: var(--text); font-weight: 700; }
+.set-menu-trigger, .set-menu-overlay, .set-menu-drawer { display: none; }
+@media (max-width: 800px) {
+  nav.set-nav { flex-wrap: nowrap; min-height: 58px; gap: .5rem; padding: .55rem 1rem; }
+  .set-nav .nav-brand { margin-right: auto; }
+  .set-nav .nav-links { display: none !important; }
+  .set-nav .mobile-back-btn { display: none !important; }
+  .set-menu-trigger { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; flex-shrink: 0; color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+  .set-menu-trigger:focus-visible, .set-menu-close:focus-visible, .set-menu-list a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .set-menu-overlay { display: block; position: fixed; inset: 0; z-index: 2000; opacity: 0; pointer-events: none; background: rgba(0,0,0,.42); transition: opacity .2s ease; }
+  .set-menu-overlay.show { opacity: 1; pointer-events: auto; }
+  .set-menu-drawer { display: block; position: fixed; top: 0; right: 0; bottom: 0; width: min(320px, 88vw); z-index: 2001; padding: max(18px, env(safe-area-inset-top)) 16px 18px; background: var(--surface); border-left: 1px solid var(--border); transform: translateX(102%); visibility: hidden; transition: transform .22s ease, visibility .22s; box-shadow: -12px 0 34px rgba(0,0,0,.12); overflow-y: auto; }
+  .set-menu-drawer.open { transform: translateX(0); visibility: visible; }
+  .set-menu-head { display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 18px; }
+  .set-menu-close { width: 38px; height: 38px; border: 0; border-radius: 10px; background: var(--surface-2); color: var(--text); font-size: 27px; cursor: pointer; }
+  .set-menu-list { display: grid; gap: 6px; }
+  .set-menu-list a { display: block; padding: 14px 16px; border-radius: 12px; color: var(--text); font-weight: 600; text-decoration: none; }
+  .set-menu-list a:hover, .set-menu-list a.current { background: var(--surface-2); color: var(--accent); }
+  body.set-menu-open { overflow: hidden; }
+  .set-action-strip { display: none !important; }
+}
