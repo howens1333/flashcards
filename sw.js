@@ -1,9 +1,11 @@
 // ⚠️  INCREMENT THIS every time you deploy — this is what tells browsers to update.
-const CACHE_NAME = 'flashdeck-cache-v10';
+const CACHE_NAME = 'flashdeck-cache-v11';
 
 const STATIC_ASSETS = [
   './app.js',
   './style.css',
+  './native.css',
+  './native.js',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

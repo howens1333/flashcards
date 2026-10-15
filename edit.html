@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Edit Set - Flashcards</title>
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2d5a27">
+<meta name="theme-color" content="#f2f2f7">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -270,6 +270,8 @@
       .kbd-shortcuts { display: none !important; }
     }
   </style>
+  <link rel="stylesheet" href="native.css">
+  <script src="native.js" defer></script>
 </head>
 <body>
 
@@ -437,7 +439,7 @@
     const hasImage = validCardImage(card[side + 'Image']);
     return `<div class="image-editor">
       ${hasImage ? `<img class="card-image" src="${card[side + 'Image']}" alt="${side} image preview">` : ''}
-      <div class="image-editor-actions"><label class="btn btn-secondary image-upload">${hasImage ? 'Replace' : 'Add'} image
+      <div class="image-editor-actions"><label class="btn btn-secondary image-upload"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>${hasImage ? 'Replace' : 'Add'} image
         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Upload ${side} image" onchange="uploadCardImage('${card.id}', '${side}', this)">
       </label>
       ${hasImage ? `<button class="btn btn-secondary" onclick="removeCardImage('${card.id}', '${side}')">Remove image</button>` : ''}</div>
