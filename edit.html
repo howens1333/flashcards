@@ -92,7 +92,7 @@
       font-size: 0.75rem;
       font-weight: 600;
       color: var(--text-muted);
-      padding-top: 0.65rem;
+      padding-top: 0;
       text-align: right;
       user-select: none;
     }
@@ -248,7 +248,14 @@
     }
     .swap-all-btn:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
     .edit-actions .btn { justify-content: center; }
-    .card-row .drag-handle, .card-row .card-num, .card-row .card-side-editor { grid-row: 2; }
+    .card-row .drag-handle, .card-row .card-num { grid-row: 1; align-self: center; }
+    .card-row .card-side-editor { grid-row: 2; }
+    .card-row .card-side-editor:nth-of-type(1) { grid-column: 3; }
+    .card-row .card-side-editor:nth-of-type(2) { grid-column: 4; }
+    .card-row .image-editor { flex-direction: column; align-items: flex-start; }
+    .card-row .image-editor .card-image { flex-basis: auto; max-width: 100%; max-height: 160px; object-position: left center; }
+    .image-editor-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+    .image-paste-hint { font-size: 0.7rem; color: var(--text-muted); margin: 0; }
     .field-label { display: block; margin-bottom: 0.4rem; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); }
     .save-bar { width: max-content; max-width: calc(100% - 2rem); white-space: nowrap; }
     .container { padding-bottom: 7rem; }
@@ -257,7 +264,7 @@
       .edit-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .card-row { grid-template-columns: minmax(0, 1fr); padding: 0.85rem; }
       .card-row .drag-handle, .card-row .card-num { display: none; }
-      .card-row .card-side-editor { grid-row: auto; grid-column: 1; }
+      .card-row .card-side-editor:nth-of-type(n) { grid-row: auto; grid-column: 1; }
       .card-row-hover-actions { grid-column: 1; grid-row: 1; }
       .hover-action-btn { width: 32px; height: 32px; }
       .kbd-shortcuts { display: none !important; }
@@ -430,30 +437,77 @@
     const hasImage = validCardImage(card[side + 'Image']);
     return `<div class="image-editor">
       ${hasImage ? `<img class="card-image" src="${card[side + 'Image']}" alt="${side} image preview">` : ''}
-      <label class="btn btn-secondary image-upload">${hasImage ? 'Replace' : 'Add'} image
+      <div class="image-editor-actions"><label class="btn btn-secondary image-upload">${hasImage ? 'Replace' : 'Add'} image
         <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" aria-label="Upload ${side} image" onchange="uploadCardImage('${card.id}', '${side}', this)">
       </label>
-      ${hasImage ? `<button class="btn btn-secondary" onclick="removeCardImage('${card.id}', '${side}')">Remove image</button>` : ''}
+      ${hasImage ? `<button class="btn btn-secondary" onclick="removeCardImage('${card.id}', '${side}')">Remove image</button>` : ''}</div>
+      <p class="image-paste-hint">Paste an image into the ${side === 'term' ? 'Term' : 'Definition'} field (⌘V / Ctrl+V).</p>
     </div>`;
+  }
+  // Share validation/compression for uploads and pasted images.
+  const imageRequests = new Map();
+  async function setCardImage(id, side, filePromise) {
+    const key = id + ':' + side;
+    const request = Symbol();
+    imageRequests.set(key, request);
+    try {
+      const data = await prepareCardImage(await filePromise);
+      const card = currentSet.cards.find(c => c.id === id);
+      if (!card || imageRequests.get(key) !== request) return;
+      card[side + 'Image'] = data;
+      markDirty();
+      // Refresh only the preview, preserving text focus and cursor position.
+      const editor = document.getElementById(side + '-' + id)?.parentElement;
+      if (editor) editor.querySelector('.image-editor').outerHTML = imageEditor(card, side);
+      toast('Image added. Save your changes to keep it on this device.');
+    } catch (error) { toast(error.message, 5000); }
+    finally { if (imageRequests.get(key) === request) imageRequests.delete(key); }
   }
   async function uploadCardImage(id, side, input) {
     const file = input.files[0];
     if (!file) return;
     input.disabled = true;
+    await setCardImage(id, side, file);
+    input.disabled = false;
+    input.value = '';
+  }
+
+  async function clipboardImageSource(src) {
+    const url = new URL(src);
+    if (!['https:', 'data:'].includes(url.protocol)) throw new Error('This copied image cannot be accessed. Copy the image itself or upload it.');
     try {
-      const data = await prepareCardImage(file);
-      const card = currentSet.cards.find(c => c.id === id);
-      if (!card) return;
-      card[side + 'Image'] = data;
-      markDirty();
-      renderCards();
-      toast('Image added. Save your changes to keep it on this device.');
-    } catch (error) { toast(error.message, 5000); }
-    finally { input.disabled = false; input.value = ''; }
+      const response = await fetch(url.href, { credentials: 'omit', signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error();
+      return await response.blob();
+    } catch {
+      throw new Error('The source blocked this copied image. Try Copy Image or paste a screenshot instead.');
+    }
+  }
+
+  function handleImagePaste(event) {
+    const clipboard = event.clipboardData;
+    if (!clipboard) return;
+    const files = Array.from(clipboard.files || []);
+    const file = files.find(file => file.type.startsWith('image/')) ||
+      Array.from(clipboard.items || []).find(item => item.kind === 'file' && item.type.startsWith('image/'))?.getAsFile();
+    // Google Docs may provide an HTML image instead of a clipboard file.
+    const html = clipboard.getData('text/html');
+    const src = !file && html ? new DOMParser().parseFromString(html, 'text/html').querySelector('img')?.getAttribute('src') : null;
+    if (!file && !src) return; // Preserve ordinary text paste.
+    event.preventDefault();
+    const field = event.currentTarget;
+    const text = clipboard.getData('text/plain');
+    if (text && html) {
+      field.setRangeText(text, field.selectionStart, field.selectionEnd, 'end');
+      updateCardField(field.dataset.cardId, field.dataset.field, field.value);
+      autoResize(field);
+    }
+    void setCardImage(field.dataset.cardId, field.dataset.field, file || clipboardImageSource(src));
   }
   function removeCardImage(id, side) {
     const card = currentSet.cards.find(c => c.id === id);
     if (!card) return;
+    imageRequests.delete(id + ':' + side);
     delete card[side + 'Image'];
     markDirty();
     renderCards();
@@ -504,6 +558,7 @@
     // Attach keydown listeners
     list.querySelectorAll('textarea').forEach(ta => {
       ta.addEventListener('keydown', handleTextareaKeydown);
+      ta.addEventListener('paste', handleImagePaste);
       autoResize(ta);
     });
 
