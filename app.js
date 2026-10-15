@@ -547,6 +547,13 @@ function _toggleChipDropdown(user) {
 }
 
 function _updateSyncUI(signedIn, name, user) {
+  const greeting = document.getElementById('home-greeting');
+  if (greeting) {
+    const firstName = (user?.displayName || user?.email?.split('@')[0] || '').trim().split(/\s+/)[0];
+    const hour = new Date().getHours();
+    const salutation = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    greeting.textContent = signedIn && user ? `${salutation}${firstName ? ', ' + firstName : ''}` : 'Home';
+  }
   const btn      = document.getElementById('sync-btn');
   const btnM     = document.getElementById('sync-btn-mobile');
   const chipWrap = document.getElementById('account-chip');
@@ -587,13 +594,11 @@ function _updateSyncUI(signedIn, name, user) {
             <div class="acct-chip-mobile-email">${user.email || ''}</div>
           </div>
         </div>
-        <div style="display:flex;gap:0.4rem;margin-bottom:0.5rem">
-          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem" onclick="closeHamburger();syncPush().then(()=>toast('Uploaded!'))">↑ Upload</button>
-          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem" onclick="closeHamburger();syncPull()">↓ Download</button>
-        </div>
-        <div style="display:flex;gap:0.4rem">
-          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem" onclick="closeHamburger();syncSwitchAccount()">Switch account</button>
-          <button class="btn btn-secondary" style="flex:1;font-size:0.8rem;color:var(--danger)" onclick="closeHamburger();syncSignOut()">Sign out</button>
+        <div class="mobile-account-actions">
+          <button class="btn btn-secondary"  onclick="closeHamburger();syncPush().then(()=>toast('Uploaded!'))">↑ Upload</button>
+          <button class="btn btn-secondary"  onclick="closeHamburger();syncPull()">↓ Download</button>
+          <button class="btn btn-secondary"  onclick="closeHamburger();syncSwitchAccount()">Switch account</button>
+          <button class="btn btn-secondary" style="color:var(--danger)" onclick="closeHamburger();syncSignOut()">Sign out</button>
         </div>`;
     }
   } else {
