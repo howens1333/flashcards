@@ -616,6 +616,16 @@
     const total = deck.length;
     if (!card) return;
 
+    // Changing cards must not animate the new answer back to the front.
+    // Finish the reset before replacing either face, including mid-flip navigation.
+    const inner = document.getElementById('card-inner');
+    const previousTransition = inner.style.transition;
+    inner.style.transition = 'none';
+    isFlipped = false;
+    inner.classList.remove('flipped');
+    void inner.offsetWidth; // Commit the unflipped transform without a transition.
+    inner.style.transition = previousTransition;
+
     document.getElementById('front-label').textContent = showDef ? 'Definition' : 'Term';
     document.getElementById('back-label').textContent  = showDef ? 'Term' : 'Definition';
     renderCardSide(document.getElementById('front-text'), card, showDef ? 'definition' : 'term');
@@ -629,10 +639,6 @@
     // Prev/next buttons
     document.getElementById('prev-btn').disabled = idx === 0;
     document.getElementById('next-btn').disabled = false;
-
-    // Reset flip state
-    isFlipped = false;
-    document.getElementById('card-inner').classList.remove('flipped');
 
     // Dots
     renderDots();
