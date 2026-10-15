@@ -78,6 +78,10 @@ function swapCardSides(card) {
   [card.term, card.definition] = [card.definition, card.term];
   [card.termImage, card.definitionImage] = [card.definitionImage, card.termImage];
 }
+// Images stay embedded in exported sets. Keep them compact for browser storage.
+const CARD_IMAGE_TARGET_BYTES = 120 * 1024;
+const CARD_IMAGE_MAX_BYTES = 220 * 1024;
+
 async function prepareCardImage(file) {
   if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
     throw new Error('Choose a PNG, JPEG, WebP, or GIF image.');
@@ -91,18 +95,36 @@ async function prepareCardImage(file) {
       img.onerror = () => reject(new Error('This image could not be opened.'));
       img.src = url;
     });
+    if (!image.width || !image.height) throw new Error('This image has invalid dimensions.');
     const canvas = document.createElement('canvas');
-    const scale = Math.min(1, 1280 / Math.max(image.width, image.height));
-    canvas.width = Math.max(1, Math.round(image.width * scale));
-    canvas.height = Math.max(1, Math.round(image.height * scale));
     const ctx = canvas.getContext('2d');
-    // White backing keeps transparent diagrams readable in both themes.
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const data = canvas.toDataURL('image/jpeg', 0.8);
-    if (data.length > 400 * 1024) throw new Error('This image is too detailed. Crop it or choose a smaller image.');
-    return data;
+    if (!ctx) throw new Error('Image processing is unavailable in this browser.');
+
+    // Start with a readable image and only reduce further when needed.
+    let longestSide = Math.min(900, Math.max(image.width, image.height));
+    let best = null;
+    for (let sizeAttempt = 0; sizeAttempt < 7; sizeAttempt++) {
+      const scale = longestSide / Math.max(image.width, image.height);
+      canvas.width = Math.max(1, Math.round(image.width * scale));
+      canvas.height = Math.max(1, Math.round(image.height * scale));
+      // White backing keeps transparent diagrams readable in both themes.
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      for (const quality of [0.8, 0.7, 0.6, 0.5, 0.4]) {
+        const data = canvas.toDataURL('image/jpeg', quality);
+        // The Base64 string (not the original file size) is what's stored.
+        const bytes = data.length;
+        if (!best || bytes < best.length) best = data;
+        if (bytes <= CARD_IMAGE_TARGET_BYTES) return data;
+      }
+      if (best.length <= CARD_IMAGE_MAX_BYTES) return best;
+      // Try smaller dimensions rather than rejecting visually complex images.
+      longestSide = Math.max(240, Math.round(longestSide * 0.8));
+    }
+    if (best && best.length <= CARD_IMAGE_MAX_BYTES) return best;
+    throw new Error('This image could not be compressed enough. Try a smaller image.');
   } finally { URL.revokeObjectURL(url); }
 }
 
