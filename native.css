@@ -834,3 +834,15 @@ body[data-page="edit"] .field-label {
     margin-left: auto;
   }
 }
+
+/* iOS focuses small-font inputs by zooming the viewport. Keep every editable
+   control at a readable size, including page-specific and inline overrides.
+   Do not disable pinch zoom in the viewport meta tag. */
+@media (max-width: 900px), (pointer: coarse) {
+  body input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  body textarea,
+  body select,
+  body [contenteditable="true"] {
+    font-size: 16px !important;
+  }
+}
