@@ -79,8 +79,8 @@ function swapCardSides(card) {
   [card.termImage, card.definitionImage] = [card.definitionImage, card.termImage];
 }
 // Images stay embedded in exported sets. Keep them compact for browser storage.
-const CARD_IMAGE_TARGET_BYTES = 120 * 1024;
-const CARD_IMAGE_MAX_BYTES = 220 * 1024;
+const CARD_IMAGE_TARGET_BYTES = 10 * 1024;
+const CARD_IMAGE_MAX_BYTES = 16 * 1024;
 
 async function prepareCardImage(file) {
   if (!file || !/^image\/(png|jpeg|webp|gif)$/.test(file.type)) {
@@ -101,9 +101,9 @@ async function prepareCardImage(file) {
     if (!ctx) throw new Error('Image processing is unavailable in this browser.');
 
     // Start with a readable image and only reduce further when needed.
-    let longestSide = Math.min(900, Math.max(image.width, image.height));
+    let longestSide = Math.min(720, Math.max(image.width, image.height));
     let best = null;
-    for (let sizeAttempt = 0; sizeAttempt < 7; sizeAttempt++) {
+    for (let sizeAttempt = 0; sizeAttempt < 16; sizeAttempt++) {
       const scale = longestSide / Math.max(image.width, image.height);
       canvas.width = Math.max(1, Math.round(image.width * scale));
       canvas.height = Math.max(1, Math.round(image.height * scale));
@@ -112,7 +112,7 @@ async function prepareCardImage(file) {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-      for (const quality of [0.8, 0.7, 0.6, 0.5, 0.4]) {
+      for (const quality of [0.78, 0.65, 0.52, 0.4, 0.3]) {
         const data = canvas.toDataURL('image/jpeg', quality);
         // The Base64 string (not the original file size) is what's stored.
         const bytes = data.length;
@@ -121,7 +121,7 @@ async function prepareCardImage(file) {
       }
       if (best.length <= CARD_IMAGE_MAX_BYTES) return best;
       // Try smaller dimensions rather than rejecting visually complex images.
-      longestSide = Math.max(240, Math.round(longestSide * 0.8));
+      longestSide = Math.max(120, Math.round(longestSide * 0.78));
     }
     if (best && best.length <= CARD_IMAGE_MAX_BYTES) return best;
     throw new Error('This image could not be compressed enough. Try a smaller image.');
@@ -683,3 +683,75 @@ function configureSetNavigation() {
   }
 }
 window.addEventListener('DOMContentLoaded', configureSetNavigation);
+
+function setupCompactSetMenu() {
+  const nav = document.querySelector('nav.set-nav');
+  if (!nav) return;
+  const links = nav.querySelector('.nav-links');
+  if (!links) return;
+  for (const name of ['focus', 'match', 'stats']) nav.querySelector('#' + name + '-link')?.remove();
+  links.querySelector('a[href="index.html"]')?.remove();
+  if (nav.querySelector('.set-menu-trigger')) return;
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'set-menu-trigger';
+  toggle.setAttribute('aria-label', 'Open set menu');
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.setAttribute('aria-controls', 'set-menu-drawer');
+  toggle.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>';
+  nav.appendChild(toggle);
+  const overlay = document.createElement('div');
+  overlay.className = 'set-menu-overlay';
+  const drawer = document.createElement('div');
+  drawer.className = 'set-menu-drawer';
+  drawer.id = 'set-menu-drawer';
+  drawer.setAttribute('role', 'dialog');
+  drawer.setAttribute('aria-modal', 'true');
+  drawer.setAttribute('aria-label', 'Set navigation');
+  drawer.innerHTML = '<div class="set-menu-head"><strong>Set navigation</strong><button type="button" class="set-menu-close" aria-label="Close menu">×</button></div><div class="set-menu-list"></div>';
+  const list = drawer.querySelector('.set-menu-list');
+  const id = getParam('id');
+  for (const [label, path] of [['Study','study.html'],['Learn','learn.html'],['Test','test.html'],['Edit','edit.html']]) {
+    const a = document.createElement('a');
+    a.href = path + '?id=' + encodeURIComponent(id || '');
+    a.textContent = label;
+    if (window.location.pathname.endsWith('/' + path)) {
+      a.classList.add('current');
+      a.setAttribute('aria-current', 'page');
+    }
+    list.appendChild(a);
+  }
+  document.body.append(overlay, drawer);
+  let previousFocus = null;
+  const close = () => {
+    drawer.classList.remove('open');
+    overlay.classList.remove('show');
+    toggle.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('set-menu-open');
+    if (previousFocus) previousFocus.focus();
+  };
+  toggle.addEventListener('click', () => {
+    previousFocus = document.activeElement;
+    drawer.classList.add('open');
+    overlay.classList.add('show');
+    toggle.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('set-menu-open');
+    drawer.querySelector('.set-menu-close').focus();
+  });
+  overlay.addEventListener('click', close);
+  drawer.querySelector('.set-menu-close').addEventListener('click', close);
+  document.addEventListener('keydown', event => {
+    if (!drawer.classList.contains('open')) return;
+    if (event.key === 'Escape') close();
+    if (event.key === 'Tab') {
+      const controls = [...drawer.querySelectorAll('button, a[href]')];
+      const first = controls[0], last = controls[controls.length-1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    }
+  });
+  const media = window.matchMedia('(min-width: 801px)');
+  media.addEventListener?.('change', () => { if (media.matches && drawer.classList.contains('open')) close(); });
+}
+window.addEventListener('DOMContentLoaded', setupCompactSetMenu);
+
